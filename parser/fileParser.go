@@ -10,13 +10,13 @@ import (
 type FileParser struct {
 	filename               string
 	Err                    error
-	logTextToEntryFunction func(line string) logentry.LogEntry
+	logTextToEntryFunction func(line string) *logentry.LogEntry
 }
 
-func NewFileParser(filename string, logTextToEntryFunction func(line string) logentry.LogEntry) (p *FileParser) {
+func NewFileParser(filename *string, logTextToEntryFunction func(line string) *logentry.LogEntry) (p *FileParser) {
 	p = new(FileParser)
 
-	p.filename = filename
+	p.filename = *filename
 	p.logTextToEntryFunction = logTextToEntryFunction
 
 	return p
@@ -48,7 +48,7 @@ func (p *FileParser) doParse(file *os.File, out chan logentry.LogEntry) {
 
 	scanner := bufio.NewScanner(file)
 	for scanner.Scan() {
-		out <- p.logTextToEntryFunction(scanner.Text())
+		out <- *p.logTextToEntryFunction(scanner.Text())
 	}
 	close(out)
 

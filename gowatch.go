@@ -26,7 +26,7 @@ func main() {
 		parser := parser.NewSimpleFileParser(logfile.Filename)
 		entries := parser.Parse()
 
-		logfileMapper := mapper.NewLogfileConfigMapper(logfile)
+		logfileMapper := mapper.NewLogfileConfigMapper(&logfile)
 		mappedEntries := logfileMapper.Map(entries)
 
 		summarizer := summary.NewTagCounter()
