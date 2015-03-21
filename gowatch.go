@@ -22,11 +22,12 @@ func main() {
 
 	config := config.ReadConfigByFilename(*configFilePath)
 
-	for _, logfile := range config.Logfiles {
+	for i := range config.Logfiles {
+		logfile := &config.Logfiles[i]
 		parser := parser.NewSimpleFileParser(logfile.Filename)
 		entries := parser.Parse()
 
-		logfileMapper := mapper.NewLogfileConfigMapper(&logfile)
+		logfileMapper := mapper.NewLogfileConfigMapper(logfile)
 		mappedEntries := logfileMapper.Map(entries)
 
 		summarizer := summary.NewTagCounter()
