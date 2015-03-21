@@ -5,17 +5,17 @@ import (
 	"github.com/fxnn/gowatch/logentry"
 )
 
-type LogfileConfigMapper struct {
+type ConfigurationBasedMapper struct {
 	config.GowatchLogfile
 }
 
-func NewLogfileConfigMapper(config *config.GowatchLogfile) (m *LogfileConfigMapper) {
-	m = new(LogfileConfigMapper)
+func NewConfigurationBasedMapper(config *config.GowatchLogfile) (m *ConfigurationBasedMapper) {
+	m = new(ConfigurationBasedMapper)
 	m.GowatchLogfile = *config
 	return
 }
 
-func (m *LogfileConfigMapper) Map(entries <-chan logentry.LogEntry) <-chan logentry.LogEntry {
+func (m *ConfigurationBasedMapper) Map(entries <-chan logentry.LogEntry) <-chan logentry.LogEntry {
 	out := make(chan logentry.LogEntry)
 
 	go func() {
