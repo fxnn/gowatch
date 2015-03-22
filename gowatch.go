@@ -24,7 +24,7 @@ func main() {
 
 	for i := range config.Logfiles {
 		logfile := &config.Logfiles[i]
-		parser := parser.NewSimpleFileParser(logfile.Filename)
+		parser := parser.NewSimpleParser(parser.NewFileLineSource(logfile.Filename))
 		entries := parser.Parse()
 
 		logfileMapper := mapper.NewConfigurationBasedMapper(logfile)

@@ -11,6 +11,7 @@ type LogEntry struct {
 	User      string
 	Thread    string
 	Process   string
+	Custom    map[string]string
 }
 
 func New() (entry *LogEntry) {
