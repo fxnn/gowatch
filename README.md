@@ -5,6 +5,8 @@ summaries in formats ready for delivery via E-Mail or Web.
 
 However, this is still under development and _not_ ready for use yet.
 
+[![Build Status](https://travis-ci.org/fxnn/gowatch.svg)](https://travis-ci.org/fxnn/gowatch)
+
 ## Related work
 
 * **[logwatch](http://logwatch.sourceforge.net)** is widely used by Linux server administrators round the world, and so did
