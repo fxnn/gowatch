@@ -15,5 +15,8 @@ type LogEntry struct {
 }
 
 func New() (entry *LogEntry) {
-	return new(LogEntry)
+	result := new(LogEntry)
+	result.Tags = make([]string, 0, 10)
+	result.Custom = make(map[string]string)
+	return result
 }
