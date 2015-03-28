@@ -6,13 +6,15 @@ import (
 	"log"
 )
 
-type GowatchLogfile struct {
-	Filename string
-	Tags     []string
-}
-
 type GowatchConfig struct {
 	Logfiles []GowatchLogfile
+}
+
+type GowatchLogfile struct {
+	Filename        string
+	Tags            []string
+	Parser 	        string
+	ParserConfig    map[string]string
 }
 
 func ReadConfigByFilename(filename string) *GowatchConfig {
