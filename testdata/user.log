@@ -1,0 +1,4 @@
+Mar 24 04:33:38 vs192-168-0-1 cron-apt: Current default time zone: 'Europe/Berlin'
+Mar 24 04:33:38 vs192-168-0-1 cron-apt: Local time is now:      Tue Mar 24 04:33:38 CET 2015.
+Mar 24 04:33:38 vs192-168-0-1 cron-apt: Universal Time is now:  Tue Mar 24 03:33:38 UTC 2015.
+Mar 24 04:33:38 vs192-168-0-1 cron-apt: Run 'dpkg-reconfigure tzdata' if you wish to change it.

@@ -12,8 +12,9 @@ type RegexpParser struct {
     submatchNameMap map[int]string
 }
 
-func NewRegexpParser(linesource LineSource, regexp *regexp.Regexp, submatchNameMap map[int]string) (p *RegexpParser) {
-    return &RegexpParser{linesource, regexp, submatchNameMap}
+func NewRegexpParser(linesource LineSource, pattern string, submatchNameMap map[int]string) (p *RegexpParser, err error) {
+    regexp, err := regexp.Compile(pattern)
+    return &RegexpParser{linesource, regexp, submatchNameMap}, err
 }
 
 func (p *RegexpParser) Parse() <-chan logentry.LogEntry {

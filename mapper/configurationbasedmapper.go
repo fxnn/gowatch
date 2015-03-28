@@ -9,9 +9,9 @@ type ConfigurationBasedMapper struct {
 	config.GowatchLogfile
 }
 
-func NewConfigurationBasedMapper(config *config.GowatchLogfile) (m *ConfigurationBasedMapper) {
+func NewConfigurationBasedMapper(config config.GowatchLogfile) (m *ConfigurationBasedMapper) {
 	m = new(ConfigurationBasedMapper)
-	m.GowatchLogfile = *config
+	m.GowatchLogfile = config
 	return
 }
 
