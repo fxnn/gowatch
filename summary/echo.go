@@ -18,18 +18,23 @@ func NewEcho() (e *Echo) {
 	return
 }
 
-func (tc *Echo) Summarize(entries <-chan logentry.LogEntry) {
+func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
-		tc.outputLines = append(tc.outputLines, fmt.Sprint(entry))
+		e.outputLines = append(e.outputLines, fmt.Sprint(entry))
 	}
-	tc.waitGroup.Done()
+	e.waitGroup.Done()
 }
 
-func (tc *Echo) String() string {
+func (e *Echo) NumberOfLines() int {
+	e.waitGroup.Wait()
+	return len(e.outputLines)
+}
+
+func (e *Echo) String() string {
 	var buffer bytes.Buffer
 
-	tc.waitGroup.Wait()
-	for _, line := range tc.outputLines {
+	e.waitGroup.Wait()
+	for _, line := range e.outputLines {
 		buffer.WriteString(line + "\n")
 	}
 
