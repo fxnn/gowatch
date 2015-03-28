@@ -18,6 +18,12 @@ However, this is still under development and _not_ ready for use yet.
   parks. However, they need several Gigabytes of RAM and that's just far too heavy for my small tiny server. Gowatch
   aims to be a small and easy-to-be-used tool with low requirements, just as logwatch always was.
 
+## 3rd Party Libraries
+
+* **[gemsi/grok](http://github.com/gemsi/grok)** is a neat Grok implementation in Go. Grok itself is a simple DRY method
+  for log parsing, known from [logstash](http://logstash.net/docs/latest/filters/grok), but also there as standalone C
+  implementation: see for [jordansissel/grok](https://github.com/jordansissel/grok).
+
 ## License
 
 Licensed under MIT, see for [LICENSE](LICENSE) file.
