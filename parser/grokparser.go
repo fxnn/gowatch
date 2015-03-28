@@ -1,8 +1,7 @@
 package parser
 
-import "github.com/gemsi/grok"
-
 import (
+    "github.com/gemsi/grok"
     "github.com/fxnn/gowatch/logentry"
     "log"
 )
@@ -13,8 +12,12 @@ type GrokParser struct {
     pattern         string
 }
 
-func NewGrokParser(linesource LineSource, grok *grok.Grok, pattern string) (p *GrokParser) {
-    return &GrokParser{linesource, grok, pattern}
+func NewGrokParser(linesource LineSource, pattern string) (p *GrokParser) {
+    return &GrokParser{linesource:linesource, grok:grok.New(), pattern:pattern}
+}
+
+func (p *GrokParser) AddPattern(name string, pattern string) {
+    p.grok.AddPattern(name, pattern)
 }
 
 func (p *GrokParser) Parse() <-chan logentry.LogEntry {
