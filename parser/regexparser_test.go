@@ -12,7 +12,8 @@ func TestSingleFieldAsMessage(t *testing.T) {
 	regexp := givenRegexpPattern(t, "^x([^x]*)x$")
 	linesource := givenLineSource(t, "xabcx")
 
-	result := NewRegexpParser(linesource, regexp, submatchNameMap).Parse()
+	parser := NewRegexpParser(linesource, regexp, submatchNameMap)
+	result := parser.Parse()
 
 	require.NotNil(t, result)
 
@@ -26,7 +27,8 @@ func TestSingleFieldAsTag(t *testing.T) {
 	regexp := givenRegexpPattern(t, "^x([^x]*)x$")
 	linesource := givenLineSource(t, "xabcx")
 
-	result := NewRegexpParser(linesource, regexp, submatchNameMap).Parse()
+	parser := NewRegexpParser(linesource, regexp, submatchNameMap)
+	result := parser.Parse()
 
 	require.NotNil(t, result)
 
@@ -40,7 +42,8 @@ func TestSingleFieldAsLogLevel(t *testing.T) {
 	regexp := givenRegexpPattern(t, "^x([^x]*)x$")
 	linesource := givenLineSource(t, "xDEBUGx")
 
-	result := NewRegexpParser(linesource, regexp, submatchNameMap).Parse()
+	parser := NewRegexpParser(linesource, regexp, submatchNameMap)
+	result := parser.Parse()
 
 	require.NotNil(t, result)
 
@@ -54,21 +57,14 @@ func TestSingleFieldAsCustomEntry(t *testing.T) {
 	regexp := givenRegexpPattern(t, "^x([^x]*)x$")
 	linesource := givenLineSource(t, "xabcx")
 
-	result := NewRegexpParser(linesource, regexp, submatchNameMap).Parse()
+	parser := NewRegexpParser(linesource, regexp, submatchNameMap)
+	result := parser.Parse()
 
 	require.NotNil(t, result)
 
 	resultEntry := <-result
 	require.NotNil(t, resultEntry)
 	require.Equal(t, "abc", resultEntry.Custom["MyCustomEntry"])
-}
-
-func givenLineSource(t *testing.T, lines ...string) LineSource {
-	linesource := NewSimpleLineSource()
-	for _, line := range lines {
-		linesource.AddLine(line)
-	}
-	return linesource
 }
 
 func givenRegexpPattern(t *testing.T, pattern string) *regexp.Regexp {
