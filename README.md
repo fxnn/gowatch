@@ -22,7 +22,7 @@ However, this is still under development and _not_ ready for use yet.
 
 * **[gemsi/grok](http://github.com/gemsi/grok)** is a neat Grok implementation in Go. Grok itself is a simple DRY method
   for log parsing, known from [logstash](http://logstash.net/docs/latest/filters/grok), but also there as standalone C
-  implementation: see for [jordansissel/grok](https://github.com/jordansissel/grok
+  implementation: see for [jordansissel/grok](https://github.com/jordansissel/grok).
 * **[stretchr/testify](http://github.com/stretchr/testify)** brings assertions to Go, just the way they feel right.
 
 ...among others. Thanks a lot for your work!
