@@ -25,15 +25,17 @@ func (p *GrokParser) Parse() <-chan logentry.LogEntry {
 }
 
 func (p *GrokParser) lineToLogEntry(line string, entry *logentry.LogEntry) {
-    matches, err := p.grok.Parse(p.pattern, line)
+    matches, err := p.grok.ParseToMultiMap(p.pattern, line)
     if err != nil {
         log.Print(err)
         return
     }
 
-    for field, value := range matches {
-        if err := entry.AssignValue(field, value); err != nil {
-            log.Print(err)
+    for field, values := range matches {
+        for _, value := range values {
+            if err := entry.AssignValue(field, value); err != nil {
+                log.Print(err)
+            }
         }
     }
 }

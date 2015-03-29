@@ -47,9 +47,6 @@ func TestGrok_SingleTag(t *testing.T) {
 }
 
 func TestGrok_MultipleTags(t *testing.T) {
-    // TODO: easy to implement; should create pull request
-    t.Skip("Not currently supported by github.com/gemsi/grok")
-
     linesource := givenLineSource(t, "abc def")
 
     parser := NewGrokParser(linesource, "^%{DATA:Tags} %{DATA:Tags}$")
