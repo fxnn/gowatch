@@ -56,17 +56,6 @@ func createParser(logfile config.LogfileConfig, linesource parser.LineSource) pa
 		} else {
 			log.Fatal("Grok parser used without pattern on logfile '", logfile.Filename, "'")
 		}
-	case "regexp":
-		if pattern, ok := logfile.Config["pattern"]; ok {
-			// TODO: implement that map or remove the whole regexp parser
-			if parser, err := parser.NewRegexpParser(linesource, fmt.Sprint(pattern), make(map[int]string)); err == nil {
-				return parser
-			} else {
-				log.Fatal(err)
-			}
-		} else {
-			log.Fatal("Regexp parser used without pattern on logfile '", logfile.Filename, "'")
-		}
 	default:
 		log.Fatal("Unrecognized parser '", logfile.Parser, "' on logfile '", logfile.Filename, "'")
 	}
