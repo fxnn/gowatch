@@ -14,11 +14,11 @@ type Echo struct {
 
 func NewEcho() (e *Echo) {
 	e = new(Echo)
-	e.waitGroup.Add(1)
 	return
 }
 
 func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
+	e.waitGroup.Add(1)
 	for entry := range entries {
 		e.outputLines = append(e.outputLines, fmt.Sprint(entry))
 	}

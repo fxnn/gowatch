@@ -6,20 +6,20 @@ import (
 )
 
 type TitledStringer struct{
-    title		string
-    stringer	fmt.Stringer
+    Title        string
+    Stringer     fmt.Stringer
 }
 
 func (s *TitledStringer) String() string {
     var buffer bytes.Buffer
 
-    buffer.WriteString(s.title)
+    buffer.WriteString(s.Title)
     buffer.WriteString("\n")
-    buffer.WriteString(strings.Repeat("=", len(s.title)))
+    buffer.WriteString(strings.Repeat("=", len(s.Title)))
     buffer.WriteString("\n")
 
-    buffer.WriteString(s.stringer.String())
-    buffer.WriteString("\n\n")
+    buffer.WriteString(s.Stringer.String())
+    buffer.WriteString("\n")
 
     return buffer.String()
 }

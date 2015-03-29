@@ -8,8 +8,6 @@ import (
 	"github.com/fxnn/gowatch/parser"
 	"github.com/fxnn/gowatch/summary"
 	"log"
-	"bytes"
-	"strings"
 )
 
 func main() {

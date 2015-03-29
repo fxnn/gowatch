@@ -21,8 +21,20 @@ func (summaryConfig *SummaryConfig) CreateSummarizer() (summary.Summarizer, fmt.
         case "tagcounter":
             tagcounter := summary.NewTagCounter()
             return tagcounter, &summary.TitledStringer{title, tagcounter}
+        case "grokcounter":
+            patternsByName := make(map[string]string)
+            for key, value := range summaryConfig.Config {
+                if pattern, ok := value.(string); ok {
+                    patternsByName[fmt.Sprint(key)] = pattern
+                } else {
+                    log.Fatalf("Unrecognized option for summarizer '%s': key '%s' with value '%s'", summaryConfig.Summarizer, key, value)
+                }
+            }
+
+            grokcounter := summary.NewGrokCounter(patternsByName)
+            return grokcounter, &summary.TitledStringer{title, grokcounter}
         default:
-            log.Fatal("Unrecognized parser '" + summaryConfig.Summarizer)
+            log.Fatalf("Unrecognized parser '%s'", summaryConfig.Summarizer)
             return nil, nil // actually never reached
     }
 }

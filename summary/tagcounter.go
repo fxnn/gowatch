@@ -15,12 +15,12 @@ type TagCounter struct {
 func NewTagCounter() (tc *TagCounter) {
 	tc = new(TagCounter)
 	tc.countPerTag = make(map[string]int)
-	tc.waitGroup.Add(1)
 
 	return
 }
 
 func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
+	tc.waitGroup.Add(1)
 	for entry := range entries {
 		for _, tag := range entry.Tags {
 			count := tc.countPerTag[tag]
