@@ -5,60 +5,80 @@ import (
     "github.com/stretchr/testify/require"
 )
 
-func TestSimpleLogfile(t *testing.T) {
+func TestLogParsing(t *testing.T) {
 
-    config := ReadConfigFromBytes([]byte(`
-        logfiles:
-        - filename: my-filename.log
-          tags:
-          - tag1
-          - tag2
-          parser: grok
-          parserconfig: {
-            pattern: my-pattern,
-            other-config: abc
-          }
-    `))
+    testcases := []struct{
+        input       string
+        expected    GowatchConfig
+    }{
+        // filename and tags
+        {
+            "logfiles:\n- filename: my-filename.log\n  tags:\n  - tag1\n  - tag2",
+            GowatchConfig{
+                Logfiles:[]LogfileConfig{
+                    LogfileConfig{
+                        Filename:"my-filename.log",
+                        Tags: []string{"tag1", "tag2"},
+                    },
+                },
+            },
+        }, {
+            "logfiles: [{filename: my-filename.log, tags: [tag1, tag2]}]",
+            GowatchConfig{
+                Logfiles:[]LogfileConfig{
+                    LogfileConfig{
+                        Filename:"my-filename.log",
+                        Tags: []string{"tag1", "tag2"},
+                    },
+                },
+            },
+        }, {
+            "logfiles: [{filename: my-filename.log}, {filename: another-log.txt}]",
+            GowatchConfig{
+                Logfiles:[]LogfileConfig{
+                    LogfileConfig{
+                        Filename:"my-filename.log",
+                    },
+                    LogfileConfig{
+                        Filename:"another-log.txt",
+                    },
+                },
+            },
+        },
+        // parser
+        {
+            "logfiles: [{parser: grok, config: {pattern: my-pattern, patterns: {a: b, c: d}}}]",
+            GowatchConfig{
+                Logfiles:[]LogfileConfig{LogfileConfig{
+                    Parser: "grok",
+                    Config: map[interface{}]interface{}{
+                        "pattern": "my-pattern",
+                        "patterns": map[interface{}]interface{}{
+                            "a": "b",
+                            "c": "d",
+                        },
+                    },
+                }},
+            },
+        },
+        // summary
+        {
+            "summary: [{summarizer: echo, title: Title, config: {a: {b: c}}}]",
+            GowatchConfig{Summary:[]SummaryConfig{
+                SummaryConfig{
+                    Summarizer: "echo",
+                    Title: "Title",
+                    Config: map[interface{}]interface{}{
+                        "a": map[interface{}]interface{}{"b": "c"},
+                    },
+                },
+            }},
+        },
+    }
 
-    require.Len(t, config.Logfiles, 1)
-
-    logfile := config.Logfiles[0]
-
-    require.Equal(t, "my-filename.log", logfile.Filename)
-
-    require.Len(t, logfile.Tags, 2)
-    require.Contains(t, logfile.Tags, "tag1")
-    require.Contains(t, logfile.Tags, "tag2")
-
-    require.Equal(t, "grok", logfile.Parser)
-
-    require.Len(t, logfile.ParserConfig, 2)
-    require.Equal(t, "my-pattern", logfile.ParserConfig["pattern"])
-    require.Equal(t, "abc", logfile.ParserConfig["other-config"])
+    for _, testcase := range testcases {
+        actual := ReadConfigFromBytes([]byte(testcase.input))
+        require.Equal(t, &testcase.expected, actual)
+    }
 
 }
-
-func TestMultipleLogfiles(t *testing.T) {
-
-    config := ReadConfigFromBytes([]byte(`
-        logfiles:
-        - filename: my-filename.log
-          parser: grok
-        - filename: otherfile.txt
-          parser: regexp
-    `))
-
-    require.Len(t, config.Logfiles, 2)
-
-    var logfile GowatchLogfile
-
-    logfile = config.Logfiles[0]
-    require.Equal(t, "my-filename.log", logfile.Filename)
-    require.Equal(t, "grok", logfile.Parser)
-
-    logfile = config.Logfiles[1]
-    require.Equal(t, "otherfile.txt", logfile.Filename)
-    require.Equal(t, "regexp", logfile.Parser)
-
-}
-

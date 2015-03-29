@@ -6,12 +6,12 @@ import (
 )
 
 type ConfigurationBasedMapper struct {
-	config.GowatchLogfile
+	config.LogfileConfig
 }
 
-func NewConfigurationBasedMapper(config config.GowatchLogfile) (m *ConfigurationBasedMapper) {
+func NewConfigurationBasedMapper(config config.LogfileConfig) (m *ConfigurationBasedMapper) {
 	m = new(ConfigurationBasedMapper)
-	m.GowatchLogfile = config
+	m.LogfileConfig = config
 	return
 }
 
