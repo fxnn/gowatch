@@ -3,16 +3,18 @@ package summary
 import (
 	"bytes"
 	"github.com/fxnn/gowatch/logentry"
-	"strconv"
-	"sync"
 	"github.com/gemsi/grok"
+	"log"
+	"strconv"
+	"strings"
+	"sync"
 )
 
 type GrokCounter struct {
-	grok			*grok.Grok
-	patternsByName        map[string]string
+	grok                *grok.Grok
+	patternsByName      map[string]string
 	countPerPatternName map[string]int
-	waitGroup   	sync.WaitGroup
+	waitGroup           sync.WaitGroup
 }
 
 func NewGrokCounter(patternsByName map[string]string) (tc *GrokCounter) {
@@ -26,14 +28,20 @@ func NewGrokCounter(patternsByName map[string]string) (tc *GrokCounter) {
 
 func (tc *GrokCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	tc.waitGroup.Add(1)
-	go  tc.Summarize(entries)
+	go tc.Summarize(entries)
 }
 
 func (tc *GrokCounter) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
 		for name, pattern := range tc.patternsByName {
-			if ok, _ := tc.grok.Match(pattern, entry.Message); ok {
-				// TODO: possibility to generate the name out of the parsed message
+			matches, err := tc.grok.Parse(pattern, entry.Message)
+			if err != nil {
+				log.Print(err)
+			} else if len(matches) > 0 {
+				for matchName, matchContent := range matches {
+					// TODO: Add escape possibility
+					name = strings.Replace(name, "%{"+matchName+"}", matchContent, len(name))
+				}
 				tc.countPerPatternName[name] = tc.countPerPatternName[name] + 1
 			}
 		}
