@@ -24,8 +24,12 @@ func NewGrokCounter(patternsByName map[string]string) (tc *GrokCounter) {
 	return
 }
 
-func (tc *GrokCounter) Summarize(entries <-chan logentry.LogEntry) {
+func (tc *GrokCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	tc.waitGroup.Add(1)
+	go  tc.Summarize(entries)
+}
+
+func (tc *GrokCounter) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
 		for name, pattern := range tc.patternsByName {
 			if ok, _ := tc.grok.Match(pattern, entry.Message); ok {

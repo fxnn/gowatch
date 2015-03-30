@@ -14,14 +14,18 @@ func (m *Multiplexer) AddSummarizer(s Summarizer) {
     m.summarizers = append(m.summarizers, s)
 }
 
-func (m *Multiplexer) Summarize(entries <-chan logentry.LogEntry) {
+func (m *Multiplexer) SummarizeAsync(entries <-chan logentry.LogEntry) {
     channels := make([]chan logentry.LogEntry, len(m.summarizers))
     for i, s := range m.summarizers {
         ch := make(chan logentry.LogEntry)
-        go s.Summarize(ch)
+        s.SummarizeAsync(ch)
         channels[i] = ch
     }
 
+    go m.Summarize(channels, entries)
+}
+
+func (m *Multiplexer) Summarize(channels []chan logentry.LogEntry, entries <-chan logentry.LogEntry) {
     for entry := range entries {
         for _, channel := range channels {
             channel <- entry

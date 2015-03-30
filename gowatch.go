@@ -36,7 +36,7 @@ func main() {
 		logfileMapper := mapper.NewConfigurationBasedMapper(logfile)
 		mappedEntries := logfileMapper.Map(entries)
 
-		summarizers.Summarize(mappedEntries)
+		summarizers.SummarizeAsync(mappedEntries)
 	}
 
 	for _, summaryStringer := range summaryStringers {

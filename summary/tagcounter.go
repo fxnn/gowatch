@@ -19,8 +19,12 @@ func NewTagCounter() (tc *TagCounter) {
 	return
 }
 
-func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
+func (tc *TagCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	tc.waitGroup.Add(1)
+	go tc.Summarize(entries)
+}
+
+func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
 		for _, tag := range entry.Tags {
 			count := tc.countPerTag[tag]

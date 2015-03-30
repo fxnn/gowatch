@@ -17,8 +17,12 @@ func NewEcho() (e *Echo) {
 	return
 }
 
-func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
+func (e *Echo) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	e.waitGroup.Add(1)
+	go e.Summarize(entries)
+}
+
+func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
 		e.outputLines = append(e.outputLines, fmt.Sprint(entry))
 	}

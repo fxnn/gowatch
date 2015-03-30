@@ -16,7 +16,7 @@ func TestSummarizeWithTwoEchoes(t *testing.T) {
 
     // when
     entries := make(chan logentry.LogEntry, 3)
-    go sut.Summarize(entries)
+    sut.SummarizeAsync(entries)
 
     entries <- *logentry.New()
     entries <- *logentry.New()
