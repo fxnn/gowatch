@@ -21,7 +21,10 @@ func NewTagCounter() (tc *TagCounter) {
 
 func (tc *TagCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	tc.waitGroup.Add(1)
-	go tc.Summarize(entries)
+	go func() {
+		tc.Summarize(entries)
+		tc.waitGroup.Done()
+	}()
 }
 
 func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
@@ -32,13 +35,16 @@ func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
 			tc.countPerTag[tag] = count
 		}
 	}
-	tc.waitGroup.Done()
+}
+
+func (tc *TagCounter) StringAfterSummarizeAsyncCompleted() string {
+	tc.waitGroup.Wait()
+	return tc.String()
 }
 
 func (tc *TagCounter) String() string {
 	var buffer bytes.Buffer
 
-	tc.waitGroup.Wait()
 	for tag, count := range tc.countPerTag {
 		buffer.WriteString(tag + ": " + strconv.Itoa(count) + "\n")
 	}

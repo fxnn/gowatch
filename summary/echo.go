@@ -2,14 +2,14 @@ package summary
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/fxnn/gowatch/logentry"
 	"sync"
-	"fmt"
 )
 
 type Echo struct {
 	outputLines []string
-	waitGroup sync.WaitGroup
+	waitGroup   sync.WaitGroup
 }
 
 func NewEcho() (e *Echo) {
@@ -19,25 +19,31 @@ func NewEcho() (e *Echo) {
 
 func (e *Echo) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	e.waitGroup.Add(1)
-	go e.Summarize(entries)
+	go func() {
+		e.Summarize(entries)
+		e.waitGroup.Done()
+	}()
 }
 
 func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
 		e.outputLines = append(e.outputLines, fmt.Sprint(entry))
 	}
-	e.waitGroup.Done()
 }
 
-func (e *Echo) NumberOfLines() int {
+func (e *Echo) NumberOfLinesAfterSummarizeAsyncCompleted() int {
 	e.waitGroup.Wait()
 	return len(e.outputLines)
+}
+
+func (e *Echo) StringAfterSummarizeAsyncCompleted() string {
+	e.waitGroup.Wait()
+	return e.String()
 }
 
 func (e *Echo) String() string {
 	var buffer bytes.Buffer
 
-	e.waitGroup.Wait()
 	for _, line := range e.outputLines {
 		buffer.WriteString(line + "\n")
 	}

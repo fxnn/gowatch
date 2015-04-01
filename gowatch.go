@@ -8,6 +8,7 @@ import (
 	"github.com/fxnn/gowatch/parser"
 	"github.com/fxnn/gowatch/summary"
 	"log"
+	"strings"
 )
 
 func main() {
@@ -20,12 +21,15 @@ func main() {
 
 	config := config.ReadConfigByFilename(*configFilePath)
 
-	summarizers := summary.NewMultiplexer()
-	summaryStringers := make([]fmt.Stringer, len(config.Summary))
+	multiplexer := summary.NewMultiplexer()
+	summarizerTitles := make([]string, len(config.Summary))
 	for i, summaryConfig := range config.Summary {
-		summarizer, stringer := summaryConfig.CreateSummarizer()
-		summarizers.AddSummarizer(summarizer)
-		summaryStringers[i] = stringer
+		multiplexer.AddSummarizer(summaryConfig.CreateSummarizer())
+		if summaryConfig.Title != "" {
+			summarizerTitles[i] = summaryConfig.Title
+		} else {
+			summarizerTitles[i] = summaryConfig.Summarizer
+		}
 	}
 
 	for _, logfile := range config.Logfiles {
@@ -36,12 +40,13 @@ func main() {
 		logfileMapper := mapper.NewConfigurationBasedMapper(logfile)
 		mappedEntries := logfileMapper.Map(entries)
 
-		summarizers.SummarizeAsync(mappedEntries)
+		multiplexer.SummarizeAsync(mappedEntries)
 	}
 
-	for _, summaryStringer := range summaryStringers {
-		fmt.Print(summaryStringer.String())
+	for i, summarizer := range multiplexer.Summarizers {
+		title := summarizerTitles[i]
+		fmt.Printf("%s\n", title)
+		fmt.Printf("%s\n", strings.Repeat("=", len(title)))
+		fmt.Printf("%s\n", summarizer.StringAfterSummarizeAsyncCompleted())
 	}
 }
-
-

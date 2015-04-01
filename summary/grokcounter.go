@@ -28,7 +28,10 @@ func NewGrokCounter(patternsByName map[string]string) (tc *GrokCounter) {
 
 func (tc *GrokCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 	tc.waitGroup.Add(1)
-	go tc.Summarize(entries)
+	go func() {
+		tc.Summarize(entries)
+		tc.waitGroup.Done()
+	}()
 }
 
 func (tc *GrokCounter) Summarize(entries <-chan logentry.LogEntry) {
@@ -46,13 +49,16 @@ func (tc *GrokCounter) Summarize(entries <-chan logentry.LogEntry) {
 			}
 		}
 	}
-	tc.waitGroup.Done()
+}
+
+func (tc *GrokCounter) StringAfterSummarizeAsyncCompleted() string {
+	tc.waitGroup.Wait()
+	return tc.String()
 }
 
 func (tc *GrokCounter) String() string {
 	var buffer bytes.Buffer
 
-	tc.waitGroup.Wait()
 	for patternName, count := range tc.countPerPatternName {
 		buffer.WriteString(patternName + ": " + strconv.Itoa(count) + "\n")
 	}
