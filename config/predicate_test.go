@@ -23,3 +23,16 @@ func TestIsNotEmpty(t *testing.T) {
 	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
 
 }
+
+func TestNot(t *testing.T) {
+
+	predicate := (&PredicateConfig{Not: messageIsEmpty()}).CreatePredicate()
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
+
+}
+
+func messageIsEmpty() *PredicateConfig {
+	return &PredicateConfig{Field: "Message", Is: "Empty"}
+}
