@@ -40,9 +40,11 @@ func (config *PredicateConfig) CreatePredicate() logentry.Predicate {
 		return &logentry.IsNotEmptyPredicate{logentry.IsEmptyPredicate{config.Field}}
 
 	case config.exactlySet("Field", "Contains"):
-		return nil // TODO
+		return &logentry.ContainsPredicate{FieldName: config.Field, ToBeContained: config.Contains}
+
 	case config.exactlySet("Field", "Matches"):
-		return nil // TODO
+		return &logentry.MatchesPredicate{FieldName: config.Field, GrokPattern: config.Matches}
+
 	default:
 		log.Fatalf("Predicate configuration not allowed: %s", config)
 		return nil // actually never executed

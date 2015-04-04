@@ -1,19 +1,62 @@
 package logentry
 
-import "reflect"
+import (
+	"github.com/fxnn/grok"
+	"reflect"
+	"strings"
+)
 
 type Predicate interface {
 	Applies(*LogEntry) bool
 }
 
+type ContainsPredicate struct {
+	FieldName     string
+	ToBeContained string
+}
+
+func (this *ContainsPredicate) Applies(logEntry *LogEntry) bool {
+	stringValue, err := logEntry.FieldAsString(this.FieldName)
+	if err == nil {
+		return strings.Contains(stringValue, this.ToBeContained)
+	}
+	return false // in case of error, let's say it doesn't contain
+}
+
+type MatchesPredicate struct {
+	FieldName   string
+	GrokPattern string
+	grok        *grok.Grok
+}
+
+func (this *MatchesPredicate) Applies(logEntry *LogEntry) bool {
+	stringValue, err := logEntry.FieldAsString(this.FieldName)
+	if err == nil {
+		g := this.grok
+		if g == nil {
+			g = grok.New()
+		}
+
+		result, err := g.Match(this.GrokPattern, stringValue)
+		if err == nil {
+			return result
+		}
+	}
+	return false // in case of error, let's say it doesn't contain
+}
+
 type IsEmptyPredicate struct{ FieldName string }
 
 func (this *IsEmptyPredicate) Applies(logEntry *LogEntry) bool {
-	fieldValue := reflect.ValueOf(logEntry).Elem().FieldByName(this.FieldName)
-	if fieldValue.IsValid() {
-		return isZero(fieldValue)
+	fieldValue, err := logEntry.FieldValue(this.FieldName)
+	if err == nil {
+		if fieldValue.IsValid() {
+			return isZero(fieldValue)
+		}
+		return logEntry.Custom[this.FieldName] == ""
 	}
-	return logEntry.Custom[this.FieldName] == ""
+
+	return true // in case of error, let's say it's empty
 }
 
 type IsNotEmptyPredicate struct{ IsEmptyPredicate }

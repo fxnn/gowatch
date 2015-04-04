@@ -33,6 +33,26 @@ func TestNot(t *testing.T) {
 
 }
 
+func TestContains(t *testing.T) {
+
+	predicate := (&PredicateConfig{Field: "Message", Contains: " does "}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "this does contain our substring"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "this doesn't contain our substring"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{}))
+
+}
+
+func TestMatches(t *testing.T) {
+
+	predicate := (&PredicateConfig{Field: "Host", Matches: "%{IPV4}"}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Host: "127.0.0.1"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Host: "localhost"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "127.0.0.1"}))
+
+}
+
 func messageIsEmpty() *PredicateConfig {
 	return &PredicateConfig{Field: "Message", Is: "Empty"}
 }
