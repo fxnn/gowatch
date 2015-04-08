@@ -7,6 +7,16 @@ However, this is still under development and _not_ ready for use yet.
 
 [![Build Status](https://travis-ci.org/fxnn/gowatch.svg)](https://travis-ci.org/fxnn/gowatch)
 
+## Installation
+
+Just `go get` the program. The following assumes that your `GOPATH` is set and your `PATH` contains your `$GOPATH/bin` directory; if not so, please read the [Code Organization](https://golang.org/doc/code.html#Organization) chapter of the go manual.
+
+```
+$ go get github.com/fxnn/gowatch
+$ gowatch
+2015/04/08 19:10:44 No configuration file specified
+```
+
 ## Related work
 
 * **[logwatch](http://logwatch.sourceforge.net)** is widely used by Linux server administrators round the world, and so did
