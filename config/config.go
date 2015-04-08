@@ -16,17 +16,19 @@ type LogfileConfig struct {
 	Tags     []string
 	Parser   string
 	Config   map[interface{}]interface{}
+	Where    PredicateConfig
 }
 
 type SummaryConfig struct {
 	Summarizer string
 	Title      string
 	Config     map[interface{}]interface{}
+	Where      PredicateConfig
 }
 
 // This structure allows to express conditions on logentry.LogEntry in configuration files. It is not made for internal
-// use, but solely for unmarshalling users configuration. The "Field" fields must be set, and then at exactly one of the
-// other fields. The latter define the condition on the value of the former.
+// use, but solely for unmarshalling users configuration. The combination of fields being set defines the behaviour. If
+// no fields set at all (zero value), we're assuming "always true".
 type PredicateConfig struct {
 	// Name of this field this condition applies to. Fields that are not in logentry.LogEntry will be treated as
 	// logentry.LogEntry.Custom entry.

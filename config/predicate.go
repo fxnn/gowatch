@@ -9,6 +9,9 @@ import (
 
 func (config *PredicateConfig) CreatePredicate() logentry.Predicate {
 	switch {
+	case config.noFieldsSet():
+		return &logentry.AcceptAllPredicate{}
+
 	case config.exactlySet("Not"):
 		return &logentry.NotPredicate{config.Not.CreatePredicate()}
 
@@ -59,6 +62,10 @@ func (config *PredicateConfig) exactlySet(fieldNames ...string) bool {
 	}
 
 	return config.noFieldsSetExcept(fieldNames...)
+}
+
+func (config *PredicateConfig) noFieldsSet() bool {
+	return config.noFieldsSetExcept()
 }
 
 func (config *PredicateConfig) noFieldsSetExcept(allowedFieldNames ...string) bool {

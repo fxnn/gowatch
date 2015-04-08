@@ -6,6 +6,15 @@ import (
 	"testing"
 )
 
+func TestZeroPredicate(t *testing.T) {
+
+	predicate := (&PredicateConfig{}).CreatePredicate()
+
+	require.True(t, predicate.Applies(logentry.New()))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
+
+}
+
 func TestIsEmpty(t *testing.T) {
 
 	predicate := (&PredicateConfig{Field: "Message", Is: "Empty"}).CreatePredicate()

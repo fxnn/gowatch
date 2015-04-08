@@ -10,6 +10,12 @@ type Predicate interface {
 	Applies(*LogEntry) bool
 }
 
+type AcceptAllPredicate struct{}
+
+func (this *AcceptAllPredicate) Applies(*LogEntry) bool {
+	return true
+}
+
 type ContainsPredicate struct {
 	FieldName     string
 	ToBeContained string
