@@ -10,11 +10,11 @@ import (
 type Echo struct {
 	outputLines []string
 	waitGroup   sync.WaitGroup
+	predicate   logentry.Predicate
 }
 
-func NewEcho() (e *Echo) {
-	e = new(Echo)
-	return
+func NewEcho(predicate logentry.Predicate) (e *Echo) {
+	return &Echo{predicate: predicate}
 }
 
 func (e *Echo) SummarizeAsync(entries <-chan logentry.LogEntry) {
@@ -27,7 +27,9 @@ func (e *Echo) SummarizeAsync(entries <-chan logentry.LogEntry) {
 
 func (e *Echo) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
-		e.outputLines = append(e.outputLines, fmt.Sprint(entry))
+		if e.predicate.Applies(&entry) {
+			e.outputLines = append(e.outputLines, fmt.Sprint(entry))
+		}
 	}
 }
 

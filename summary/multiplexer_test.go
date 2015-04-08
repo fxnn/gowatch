@@ -1,6 +1,7 @@
 package summary
 
 import (
+	"github.com/fxnn/gowatch/logentry"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -8,7 +9,7 @@ import (
 func TestSummarizeWithTwoEchoes(t *testing.T) {
 
 	// given
-	echo1, echo2 := NewEcho(), NewEcho()
+	echo1, echo2 := createEcho(), createEcho()
 	sut := NewMultiplexer()
 	sut.AddSummarizer(echo1)
 	sut.AddSummarizer(echo2)
@@ -21,4 +22,8 @@ func TestSummarizeWithTwoEchoes(t *testing.T) {
 	require.Equal(t, 3, echo1.NumberOfLinesAfterSummarizeAsyncCompleted())
 	require.Equal(t, 3, echo2.NumberOfLinesAfterSummarizeAsyncCompleted())
 
+}
+
+func createEcho() *Echo {
+	return NewEcho(&logentry.AcceptAllPredicate{})
 }

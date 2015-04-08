@@ -34,7 +34,7 @@ func main() {
 
 	for _, logfile := range config.Logfiles {
 		linesource := parser.NewFileLineSource(logfile.Filename)
-		parser := logfile.CreateParser(linesource)
+		parser := logfile.CreateParser(linesource, logfile.Where.CreatePredicate())
 		entries := parser.Parse()
 
 		logfileMapper := mapper.NewConfigurationBasedMapper(logfile)

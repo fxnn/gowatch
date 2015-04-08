@@ -10,11 +10,13 @@ import (
 type TagCounter struct {
 	countPerTag map[string]int
 	waitGroup   sync.WaitGroup
+	predicate   logentry.Predicate
 }
 
-func NewTagCounter() (tc *TagCounter) {
+func NewTagCounter(predicate logentry.Predicate) (tc *TagCounter) {
 	tc = new(TagCounter)
 	tc.countPerTag = make(map[string]int)
+	tc.predicate = predicate
 
 	return
 }
@@ -29,10 +31,12 @@ func (tc *TagCounter) SummarizeAsync(entries <-chan logentry.LogEntry) {
 
 func (tc *TagCounter) Summarize(entries <-chan logentry.LogEntry) {
 	for entry := range entries {
-		for _, tag := range entry.Tags {
-			count := tc.countPerTag[tag]
-			count++
-			tc.countPerTag[tag] = count
+		if tc.predicate.Applies(&entry) {
+			for _, tag := range entry.Tags {
+				count := tc.countPerTag[tag]
+				count++
+				tc.countPerTag[tag] = count
+			}
 		}
 	}
 }
