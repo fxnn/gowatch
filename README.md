@@ -17,6 +17,16 @@ $ gowatch
 2015/04/08 19:10:44 No configuration file specified
 ```
 
+## Usage
+
+`gowatch` will always run with a configuration file, pass it with the `-c` option:
+
+```
+gowatch -c /path/to/config.yml
+```
+
+Relative paths will always be resolved based on your current working directory. Note, that this also holds for paths inside the configuration file.
+
 ## Related work
 
 * **[logwatch](http://logwatch.sourceforge.net)** is widely used by Linux server administrators round the world, and so did
