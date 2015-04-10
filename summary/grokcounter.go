@@ -1,9 +1,10 @@
 package summary
 
 import (
-	"bytes"
 	"github.com/fxnn/gowatch/logentry"
 	"github.com/gemsi/grok"
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 	"log"
 	"strconv"
 	"strings"
@@ -16,14 +17,24 @@ type GrokCounter struct {
 	countPerPatternName map[string]int
 	waitGroup           sync.WaitGroup
 	predicate           logentry.Predicate
+	collator            *collate.Collator
 }
 
 func NewGrokCounter(patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
+	return NewGrokCounterWithLocale("en_US", patternsByName, predicate)
+}
+
+func NewGrokCounterWithLocale(locale string, patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
+	return NewGrokCounterWithLanguageTag(language.Make(locale), patternsByName, predicate)
+}
+
+func NewGrokCounterWithLanguageTag(locale language.Tag, patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
 	tc = new(GrokCounter)
 	tc.countPerPatternName = make(map[string]int)
 	tc.patternsByName = patternsByName
 	tc.grok = grok.New()
 	tc.predicate = predicate
+	tc.collator = collate.New(locale, collate.Numeric)
 
 	return
 }
@@ -65,11 +76,12 @@ func (tc *GrokCounter) StringAfterSummarizeAsyncCompleted() string {
 }
 
 func (tc *GrokCounter) String() string {
-	var buffer bytes.Buffer
+	var result stringList
 
 	for patternName, count := range tc.countPerPatternName {
-		buffer.WriteString(patternName + ": " + strconv.Itoa(count) + "\n")
+		result = result.Append(patternName + ": " + strconv.Itoa(count))
 	}
 
-	return buffer.String()
+	tc.collator.Sort(result)
+	return result.Join("\n")
 }

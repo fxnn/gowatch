@@ -19,7 +19,7 @@ func TestGrokcounterWithSimpleName(t *testing.T) {
 	result := sut.StringAfterSummarizeAsyncCompleted()
 
 	// then
-	require.Equal(t, "ip: 2\n", result)
+	require.Equal(t, "ip: 2", result)
 
 }
 
@@ -36,8 +36,8 @@ func TestGrokcounterWithReplacementInName(t *testing.T) {
 	result := sut.StringAfterSummarizeAsyncCompleted()
 
 	// then
-	require.Contains(t, result, "prefix 127.0.0.1 suffix: 1\n")
-	require.Contains(t, result, "prefix 192.168.0.1 suffix: 1\n")
+	require.Contains(t, result, "prefix 127.0.0.1 suffix: 1")
+	require.Contains(t, result, "prefix 192.168.0.1 suffix: 1")
 
 }
 
@@ -54,6 +54,40 @@ func TestGrokcounterWithPredicate(t *testing.T) {
 	result := sut.StringAfterSummarizeAsyncCompleted()
 
 	// then
-	require.Equal(t, "ip: 1\n", result)
+	require.Equal(t, "ip: 1", result)
+
+}
+
+func TestGrokcounterSortsOutput(t *testing.T) {
+
+	// given
+	patternsByName := make(map[string]string)
+	patternsByName["%{GREEDYDATA}"] = "%{GREEDYDATA}"
+	sut := NewGrokCounter(patternsByName, &logentry.AcceptAllPredicate{})
+	entries := givenEntriesWithMessages("ba", "ab", "aa")
+
+	// when
+	sut.Summarize(entries)
+	result := sut.StringAfterSummarizeAsyncCompleted()
+
+	// then
+	require.Equal(t, "aa: 1\nab: 1\nba: 1", result)
+
+}
+
+func TestGrokcounterSortsWithNumbersInMind(t *testing.T) {
+
+	// given
+	patternsByName := make(map[string]string)
+	patternsByName["%{GREEDYDATA}"] = "%{GREEDYDATA}"
+	sut := NewGrokCounter(patternsByName, &logentry.AcceptAllPredicate{})
+	entries := givenEntriesWithMessages("1", "10", "2")
+
+	// when
+	sut.Summarize(entries)
+	result := sut.StringAfterSummarizeAsyncCompleted()
+
+	// then
+	require.Equal(t, "1: 1\n2: 1\n10: 1", result)
 
 }
