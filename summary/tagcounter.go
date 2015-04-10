@@ -1,8 +1,9 @@
 package summary
 
 import (
-	"bytes"
 	"github.com/fxnn/gowatch/logentry"
+	"golang.org/x/text/collate"
+	"golang.org/x/text/language"
 	"strconv"
 	"sync"
 )
@@ -11,12 +12,22 @@ type TagCounter struct {
 	countPerTag map[string]int
 	waitGroup   sync.WaitGroup
 	predicate   logentry.Predicate
+	collator    *collate.Collator
 }
 
 func NewTagCounter(predicate logentry.Predicate) (tc *TagCounter) {
+	return NewTagCounterWithLocale("en_US", predicate)
+}
+
+func NewTagCounterWithLocale(locale string, predicate logentry.Predicate) (tc *TagCounter) {
+	return NewTagCounterWithLanguageTag(language.Make(locale), predicate)
+}
+
+func NewTagCounterWithLanguageTag(locale language.Tag, predicate logentry.Predicate) (tc *TagCounter) {
 	tc = new(TagCounter)
 	tc.countPerTag = make(map[string]int)
 	tc.predicate = predicate
+	tc.collator = collate.New(locale, collate.Numeric)
 
 	return
 }
@@ -47,11 +58,12 @@ func (tc *TagCounter) StringAfterSummarizeAsyncCompleted() string {
 }
 
 func (tc *TagCounter) String() string {
-	var buffer bytes.Buffer
+	var result stringList
 
 	for tag, count := range tc.countPerTag {
-		buffer.WriteString(tag + ": " + strconv.Itoa(count) + "\n")
+		result = result.Append(tag + ": " + strconv.Itoa(count))
 	}
 
-	return buffer.String()
+	tc.collator.Sort(result)
+	return result.Join("\n")
 }

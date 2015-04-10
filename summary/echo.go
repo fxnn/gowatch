@@ -1,7 +1,6 @@
 package summary
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/fxnn/gowatch/logentry"
 	"sync"
@@ -44,11 +43,11 @@ func (e *Echo) StringAfterSummarizeAsyncCompleted() string {
 }
 
 func (e *Echo) String() string {
-	var buffer bytes.Buffer
+	var result stringList
 
 	for _, line := range e.outputLines {
-		buffer.WriteString(line + "\n")
+		result = result.Append(line)
 	}
 
-	return buffer.String()
+	return result.Join("\n")
 }

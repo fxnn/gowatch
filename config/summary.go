@@ -13,7 +13,7 @@ func (summaryConfig *SummaryConfig) CreateSummarizer() summary.Summarizer {
 	case "echo":
 		return summary.NewEcho(predicate)
 	case "tagcounter":
-		return summary.NewTagCounter(predicate)
+		return summary.NewTagCounterWithLocale("en_US", predicate)
 	case "grokcounter":
 		patternsByName := make(map[string]string)
 		for key, value := range summaryConfig.Config {
@@ -24,7 +24,7 @@ func (summaryConfig *SummaryConfig) CreateSummarizer() summary.Summarizer {
 			}
 		}
 
-		return summary.NewGrokCounter(patternsByName, predicate)
+		return summary.NewGrokCounterWithLocale("en_US", patternsByName, predicate)
 	default:
 		log.Fatalf("Unrecognized parser '%s'", summaryConfig.Summarizer)
 		return nil // actually never reached

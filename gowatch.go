@@ -47,6 +47,6 @@ func main() {
 		title := summarizerTitles[i]
 		fmt.Printf("%s\n", title)
 		fmt.Printf("%s\n", strings.Repeat("=", len(title)))
-		fmt.Printf("%s\n", summarizer.StringAfterSummarizeAsyncCompleted())
+		fmt.Printf("%s\n\n", summarizer.StringAfterSummarizeAsyncCompleted())
 	}
 }
