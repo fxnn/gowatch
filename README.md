@@ -16,7 +16,7 @@ if not so, please read the [Code Organization](https://golang.org/doc/code.html#
 ```
 $ go get github.com/fxnn/gowatch
 $ gowatch
-2015/04/08 19:10:44 No configuration file specified
+2015/04/08 19:10:44 No configuration file given. Specify one using `-c /path/to/config.yml`
 ```
 
 ## Usage
