@@ -114,14 +114,15 @@ func TestGrok_Predicate(t *testing.T) {
 
 func TestGrok_TimeLayout(t *testing.T) {
 	linesource := givenLineSource(t, "Tue, 10 Nov 2009 23:00:00 +0000")
+	expectedTime, _ := time.Parse(time.RFC1123Z, "Tue, 10 Nov 2009 23:00:00 +0000")
 
-	parser := grokParserWithLinesourceAndPattern(linesource, time.RFC1123Z)
+	parser := grokParserWithLinesourceAndTimeLayout(linesource, time.RFC1123Z)
 	result := parser.Parse()
 
 	require.NotNil(t, result)
 
 	resultEntry := <-result
-	require.Equal(t, time.Parse(time.RFC1123Z, "Tue, 10 Nov 2009 23:00:00 +0000"), resultEntry.Timestamp)
+	require.Equal(t, expectedTime, resultEntry.Timestamp)
 }
 
 func grokParserWithLinesourceAndTimeLayout(linesource LineSource, timeLayout string) *GrokParser {
