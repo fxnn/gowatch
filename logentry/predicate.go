@@ -10,9 +10,15 @@ type Predicate interface {
 	Applies(*LogEntry) bool
 }
 
+type AcceptNothingPredicate struct{}
+
+func (this AcceptNothingPredicate) Applies(*LogEntry) bool {
+	return false
+}
+
 type AcceptAllPredicate struct{}
 
-func (this *AcceptAllPredicate) Applies(*LogEntry) bool {
+func (this AcceptAllPredicate) Applies(*LogEntry) bool {
 	return true
 }
 
@@ -21,7 +27,7 @@ type ContainsPredicate struct {
 	ToBeContained string
 }
 
-func (this *ContainsPredicate) Applies(logEntry *LogEntry) bool {
+func (this ContainsPredicate) Applies(logEntry *LogEntry) bool {
 	stringValue, err := logEntry.FieldAsString(this.FieldName)
 	if err == nil {
 		return strings.Contains(stringValue, this.ToBeContained)
@@ -35,7 +41,7 @@ type MatchesPredicate struct {
 	grok        *grok.Grok
 }
 
-func (this *MatchesPredicate) Applies(logEntry *LogEntry) bool {
+func (this MatchesPredicate) Applies(logEntry *LogEntry) bool {
 	stringValue, err := logEntry.FieldAsString(this.FieldName)
 	if err == nil {
 		g := this.grok
@@ -53,33 +59,32 @@ func (this *MatchesPredicate) Applies(logEntry *LogEntry) bool {
 
 type IsEmptyPredicate struct{ FieldName string }
 
-func (this *IsEmptyPredicate) Applies(logEntry *LogEntry) bool {
+func (this IsEmptyPredicate) Applies(logEntry *LogEntry) bool {
 	fieldValue, err := logEntry.FieldValue(this.FieldName)
 	if err == nil {
 		if fieldValue.IsValid() {
 			return isZero(fieldValue)
 		}
-		return logEntry.Custom[this.FieldName] == ""
 	}
 
-	return true // in case of error, let's say it's empty
+	return logEntry.Custom[this.FieldName] == ""
 }
 
 type IsNotEmptyPredicate struct{ IsEmptyPredicate }
 
-func (this *IsNotEmptyPredicate) Applies(logEntry *LogEntry) bool {
+func (this IsNotEmptyPredicate) Applies(logEntry *LogEntry) bool {
 	return !this.IsEmptyPredicate.Applies(logEntry)
 }
 
 type NotPredicate struct{ SubPredicate Predicate }
 
-func (this *NotPredicate) Applies(logEntry *LogEntry) bool {
+func (this NotPredicate) Applies(logEntry *LogEntry) bool {
 	return !this.SubPredicate.Applies(logEntry)
 }
 
 type AllOfPredicate struct{ SubPredicates []Predicate }
 
-func (this *AllOfPredicate) Applies(logEntry *LogEntry) bool {
+func (this AllOfPredicate) Applies(logEntry *LogEntry) bool {
 	for _, p := range this.SubPredicates {
 		if !p.Applies(logEntry) {
 			return false
@@ -91,7 +96,7 @@ func (this *AllOfPredicate) Applies(logEntry *LogEntry) bool {
 
 type AnyOfPredicate struct{ SubPredicates []Predicate }
 
-func (this *AnyOfPredicate) Applies(logEntry *LogEntry) bool {
+func (this AnyOfPredicate) Applies(logEntry *LogEntry) bool {
 	for _, p := range this.SubPredicates {
 		if p.Applies(logEntry) {
 			return true
@@ -103,7 +108,7 @@ func (this *AnyOfPredicate) Applies(logEntry *LogEntry) bool {
 
 type NoneOfPredicate struct{ SubPredicates []Predicate }
 
-func (this *NoneOfPredicate) Applies(logEntry *LogEntry) bool {
+func (this NoneOfPredicate) Applies(logEntry *LogEntry) bool {
 	for _, p := range this.SubPredicates {
 		if p.Applies(logEntry) {
 			return false
@@ -114,7 +119,7 @@ func (this *NoneOfPredicate) Applies(logEntry *LogEntry) bool {
 }
 
 func isZero(v reflect.Value) bool {
-	if v.Kind() == reflect.Slice {
+	if v.Kind() == reflect.Slice || v.Kind() == reflect.Map {
 		return v.Len() == 0
 	}
 	return v.Interface() == reflect.Zero(v.Type()).Interface()

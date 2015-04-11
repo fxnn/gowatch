@@ -4,7 +4,10 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
+	"unicode"
+	"unicode/utf8"
 )
 
 type LogEntry struct {
@@ -29,7 +32,45 @@ func New() (entry *LogEntry) {
 func (l *LogEntry) FieldValue(fieldName string) (reflect.Value, error) {
 	entryValuePointer := reflect.ValueOf(l)
 	entryValue := entryValuePointer.Elem()
-	return entryValue.FieldByName(fieldName), nil
+	fieldValue := entryValue.FieldByName(fieldName)
+	if fieldValue.IsValid() {
+		return fieldValue, nil
+	}
+	if !isOnlyFirstLetterUpperCase(fieldName) {
+		return l.FieldValue(onlyFirstLetterToUpper(fieldName))
+	}
+	return reflect.Value{}, errors.New("No valid field: " + fieldName)
+}
+
+func onlyFirstLetterToUpper(s string) string {
+	result := ""
+	if len(s) > 0 {
+		// NOTE https://blog.golang.org/strings: s[0] would be wrong, as it gives bytes, not runes
+		firstRune, width := utf8.DecodeRuneInString(s)
+		result += string(unicode.ToUpper(firstRune))
+
+		if len(s)-width > 0 {
+			result += strings.ToLower(s[width:])
+		}
+	}
+	return result
+}
+
+func isOnlyFirstLetterUpperCase(s string) bool {
+	for i, w := 0, 0; i < len(s); i += w {
+		// NOTE https://blog.golang.org/strings: s[i] would be wrong, as it gives bytes, not runes
+		rune, width := utf8.DecodeRuneInString(s[i:])
+
+		if i == 0 && !unicode.IsUpper(rune) {
+			return false
+		}
+		if i > 0 && unicode.IsUpper(rune) {
+			return false
+		}
+
+		w = width
+	}
+	return true
 }
 
 func (l *LogEntry) FieldAsString(fieldName string) (string, error) {

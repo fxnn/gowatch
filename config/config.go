@@ -6,6 +6,9 @@ import (
 	"log"
 )
 
+// Gowatch's Configuration will be marshalled and unmarshalled into/from this datastructure. Note that we don't use
+// pointers here, as their contents will not be compared in deep equals, and therefore they are harder to use in tests
+// etc.
 type GowatchConfig struct {
 	Logfiles []LogfileConfig
 	Summary  []SummaryConfig
@@ -27,27 +30,9 @@ type SummaryConfig struct {
 }
 
 // This structure allows to express conditions on logentry.LogEntry in configuration files. It is not made for internal
-// use, but solely for unmarshalling users configuration. The combination of fields being set defines the behaviour. If
-// no fields set at all (zero value), we're assuming "always true".
-type PredicateConfig struct {
-	// Name of this field this condition applies to. Fields that are not in logentry.LogEntry will be treated as
-	// logentry.LogEntry.Custom entry.
-	Field string
-	// If set, should be one of "empty", "not empty"
-	Is string
-	// If set, should be a string that is expected to be contained in the fields value.
-	Contains string
-	// If set, should be a regexp that is expected to match the fields value.
-	Matches string
-	// If set, all PredicateConfigs are expected to match.
-	AllOf []PredicateConfig
-	// If set, at least one of the PredicateConfigs is expected to match. "Field" must not be set when using this one.
-	AnyOf []PredicateConfig
-	// If set, none of the PredicateConfigs is expected to match. "Field" must not be set when using this one.
-	NoneOf []PredicateConfig
-	// If set, the PredicateConfig is expected not to match. "Field" must not be set when using this one.
-	Not *PredicateConfig
-}
+// use, but solely for unmarshalling users configuration. Keys are either names of LogEntry fields, or the special
+// values "not", "allof", "anyof" or "noneof".
+type PredicateConfig map[string]interface{}
 
 func ReadConfigByFilename(filename string) *GowatchConfig {
 	contents, err := ioutil.ReadFile(filename)

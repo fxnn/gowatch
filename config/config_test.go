@@ -45,12 +45,12 @@ func TestLogParsing(t *testing.T) {
 				},
 			},
 		}, {
-			"logfiles: [{filename: my-filename.log, where: {field: a, matches: b}}]",
+			"logfiles: [{filename: my-filename.log, where: {a: {matches: b}} }]",
 			GowatchConfig{
 				Logfiles: []LogfileConfig{
 					LogfileConfig{
 						Filename: "my-filename.log",
-						Where:    PredicateConfig{Field: "a", Matches: "b"},
+						Where:    PredicateConfig{"a": map[interface{}]interface{}{"matches": "b"}},
 					},
 				},
 			},
@@ -84,12 +84,12 @@ func TestLogParsing(t *testing.T) {
 				},
 			}},
 		}, {
-			"summary: [{title: Title, where: {field: a, matches: b}}]",
+			"summary: [{title: Title, where: {a: {matches: b}} }]",
 			GowatchConfig{
 				Summary: []SummaryConfig{
 					SummaryConfig{
 						Title: "Title",
-						Where: PredicateConfig{Field: "a", Matches: "b"},
+						Where: PredicateConfig{"a": map[interface{}]interface{}{"matches": "b"}},
 					},
 				},
 			},

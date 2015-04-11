@@ -1,101 +1,147 @@
 package config
 
 import (
+	"fmt"
 	"github.com/fxnn/gowatch/logentry"
 	"log"
-	"reflect"
 	"strings"
 )
 
-func (config *PredicateConfig) CreatePredicate() logentry.Predicate {
-	switch {
-	case config.noFieldsSet():
-		return &logentry.AcceptAllPredicate{}
+func (config PredicateConfig) CreatePredicate() logentry.Predicate {
+	predicates := make([]logentry.Predicate, 0, 3)
 
-	case config.exactlySet("Not"):
-		return &logentry.NotPredicate{config.Not.CreatePredicate()}
-
-	case config.exactlySet("AllOf"):
-		predicates := make([]logentry.Predicate, len(config.AllOf))
-		for i, subConfig := range config.AllOf {
-			predicates[i] = subConfig.CreatePredicate()
+	for key, value := range config {
+		switch strings.ToLower(key) {
+		case "not":
+			subPredicate := createPredicateOrFail(value)
+			predicates = append(predicates, logentry.NotPredicate{subPredicate})
+		case "allof":
+			subPredicates := createSubPredicatesOrFail(value)
+			predicates = append(predicates, logentry.AllOfPredicate{subPredicates})
+		case "anyof":
+			subPredicates := createSubPredicatesOrFail(value)
+			predicates = append(predicates, logentry.AnyOfPredicate{subPredicates})
+		case "noneof":
+			subPredicates := createSubPredicatesOrFail(value)
+			predicates = append(predicates, logentry.NoneOfPredicate{subPredicates})
+		default:
+			subPredicate := createPredicateForField(key, value)
+			predicates = append(predicates, subPredicate)
 		}
-		return &logentry.AllOfPredicate{predicates}
+	}
 
-	case config.exactlySet("AnyOf"):
-		predicates := make([]logentry.Predicate, len(config.AnyOf))
-		for i, subConfig := range config.AnyOf {
-			predicates[i] = subConfig.CreatePredicate()
-		}
-		return &logentry.AnyOfPredicate{predicates}
-
-	case config.exactlySet("NoneOf"):
-		predicates := make([]logentry.Predicate, len(config.NoneOf))
-		for i, subConfig := range config.NoneOf {
-			predicates[i] = subConfig.CreatePredicate()
-		}
-		return &logentry.NoneOfPredicate{predicates}
-
-	case config.exactlySet("Field", "Is") && strings.ToLower(config.Is) == "empty":
-		return &logentry.IsEmptyPredicate{config.Field}
-
-	case config.exactlySet("Field", "Is") && strings.ToLower(config.Is) == "not empty":
-		return &logentry.IsNotEmptyPredicate{logentry.IsEmptyPredicate{config.Field}}
-
-	case config.exactlySet("Field", "Contains"):
-		return &logentry.ContainsPredicate{FieldName: config.Field, ToBeContained: config.Contains}
-
-	case config.exactlySet("Field", "Matches"):
-		return &logentry.MatchesPredicate{FieldName: config.Field, GrokPattern: config.Matches}
-
+	switch len(predicates) {
+	case 0:
+		return logentry.AcceptAllPredicate{}
+	case 1:
+		return predicates[0]
 	default:
-		log.Fatalf("Predicate configuration not allowed: %s", config)
-		return nil // actually never executed
+		return logentry.AllOfPredicate{predicates}
 	}
 }
 
-func (config *PredicateConfig) exactlySet(fieldNames ...string) bool {
-	for _, fieldName := range fieldNames {
-		if !config.fieldSet(fieldName) {
-			return false
+func createPredicateForField(field string, predicateValue interface{}) logentry.Predicate {
+	predicates := make([]logentry.Predicate, 0, 3)
+
+	if predicateConfig, err := tryDecodeAsPredicateConfig(predicateValue); err != nil {
+		log.Fatalf("No valid predicate configuration \"%s\" for field \"%s\", expected a map", predicateValue, field)
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	} else {
+		for keyValue, value := range predicateConfig {
+			key := fmt.Sprint(keyValue)
+			if stringValue, ok := value.(string); !ok {
+				log.Fatalf("No valid value \"%s\" for predicate \"%s\" on field \"%s\", expected a string", value, key, field)
+				return logentry.AcceptNothingPredicate{} // actually never executed
+			} else {
+				switch strings.ToLower(key) {
+				case "is":
+					switch strings.ToLower(stringValue) {
+					case "empty":
+						predicates = append(predicates, logentry.IsEmptyPredicate{field})
+					case "not empty":
+						predicates = append(predicates, logentry.IsNotEmptyPredicate{logentry.IsEmptyPredicate{field}})
+					default:
+						log.Fatalf("No valid predicate \"%s:%s\" for field \"%s\", expected \"empty\" or \"not empty\"", key, stringValue, field)
+						return logentry.AcceptNothingPredicate{} // actually never executed
+					}
+
+				case "contains":
+					predicates = append(predicates, logentry.ContainsPredicate{FieldName: field, ToBeContained: stringValue})
+
+				case "matches":
+					predicates = append(predicates, logentry.MatchesPredicate{FieldName: field, GrokPattern: stringValue})
+
+				default:
+					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\" or \"matches\"", key, field)
+					return logentry.AcceptNothingPredicate{} // actually never executed
+				}
+			}
 		}
 	}
 
-	return config.noFieldsSetExcept(fieldNames...)
+	switch len(predicates) {
+	case 0:
+		return logentry.AcceptAllPredicate{}
+	case 1:
+		return predicates[0]
+	default:
+		return logentry.AllOfPredicate{predicates}
+	}
 }
 
-func (config *PredicateConfig) noFieldsSet() bool {
-	return config.noFieldsSetExcept()
-}
-
-func (config *PredicateConfig) noFieldsSetExcept(allowedFieldNames ...string) bool {
-	structValue := reflect.ValueOf(config).Elem()
-
-	allowedFieldsSet := 0
-	for _, allowedFieldName := range allowedFieldNames {
-		if config.fieldSet(allowedFieldName) {
-			allowedFieldsSet++
+func createSubPredicatesOrFail(value interface{}) []logentry.Predicate {
+	if predicateConfigSlice, ok := value.([]PredicateConfig); ok {
+		results := make([]logentry.Predicate, len(predicateConfigSlice))
+		for i := 0; i < len(predicateConfigSlice); i++ {
+			results[i] = predicateConfigSlice[i].CreatePredicate()
 		}
+		return results
 	}
 
-	fieldsSet := 0
-	for i := 0; i < structValue.NumField(); i++ {
-		if !isZero(structValue.Field(i)) {
-			fieldsSet++
+	if predicateConfig, err := tryDecodeAsPredicateConfig(value); err == nil {
+		results := make([]logentry.Predicate, len(predicateConfig))
+		i := 0
+		// NOTE: Return map as single predicates to be able to implement allof, anyof, noneof logic
+		for key, value := range predicateConfig {
+			singlePredicateConfig := PredicateConfig(map[string]interface{}{key: value})
+			results[i] = singlePredicateConfig.CreatePredicate()
+			i++
 		}
+		return results
+	} else {
+		log.Fatal(err)
+		return []logentry.Predicate{logentry.AcceptNothingPredicate{}} // actually never executed
 	}
-
-	return allowedFieldsSet == fieldsSet
 }
 
-func (config *PredicateConfig) fieldSet(fieldName string) bool {
-	fieldValue := reflect.ValueOf(config).Elem().FieldByName(fieldName)
-	return !isZero(fieldValue) // means: is not the zero value for that type
+func createPredicateOrFail(value interface{}) logentry.Predicate {
+	if predicateConfig, err := tryDecodeAsPredicateConfig(value); err == nil {
+		return predicateConfig.CreatePredicate()
+	} else {
+		log.Fatal(err)
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
 }
 
-func isZero(v reflect.Value) bool {
-	if v.Kind() == reflect.Slice {
-		return v.Len() == 0
+func tryDecodeAsPredicateConfig(value interface{}) (PredicateConfig, error) {
+	// TODO: Is it correct that we have to go this strange way? I had situations where the YAML parser returned me all three of them
+	if predicateConfig, ok := value.(PredicateConfig); ok {
+		return predicateConfig, nil
 	}
-	return v.Interface() == reflect.Zero(v.Type()).Interface()
+	if predicateMap, ok := value.(map[interface{}]interface{}); ok {
+		predicateConfig := make(PredicateConfig)
+		for key, value := range predicateMap {
+			predicateConfig[fmt.Sprint(key)] = value
+		}
+		return predicateConfig, nil
+	}
+	if predicateMap, ok := value.(map[string]interface{}); ok {
+		predicateConfig := make(PredicateConfig)
+		for key, value := range predicateMap {
+			predicateConfig[key] = value
+		}
+		return predicateConfig, nil
+	}
+
+	return nil, fmt.Errorf("Invalid predicate configuration \"%s\", expected a map", value)
 }

@@ -17,7 +17,7 @@ func TestZeroPredicate(t *testing.T) {
 
 func TestIsEmpty(t *testing.T) {
 
-	predicate := (&PredicateConfig{Field: "Message", Is: "Empty"}).CreatePredicate()
+	predicate := (&PredicateConfig{"message": map[string]interface{}{"is": "Empty"}}).CreatePredicate()
 
 	require.True(t, predicate.Applies(&logentry.LogEntry{}))
 	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
@@ -26,16 +26,34 @@ func TestIsEmpty(t *testing.T) {
 
 func TestIsNotEmpty(t *testing.T) {
 
-	predicate := (&PredicateConfig{Field: "Message", Is: "Not Empty"}).CreatePredicate()
+	predicate := (&PredicateConfig{"message": map[string]interface{}{"is": "Not Empty"}}).CreatePredicate()
 
 	require.False(t, predicate.Applies(&logentry.LogEntry{}))
 	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
 
 }
 
+func TestCustomIsEmpty(t *testing.T) {
+
+	predicate := (&PredicateConfig{"custom": map[string]interface{}{"is": "Empty"}}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Custom: map[string]string{"custom": "that's not empty"}}))
+
+}
+
+func TestCustomIsNotEmpty(t *testing.T) {
+
+	predicate := (&PredicateConfig{"custom": map[string]interface{}{"is": "Not Empty"}}).CreatePredicate()
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Custom: map[string]string{"custom": "that's not empty"}}))
+
+}
+
 func TestNot(t *testing.T) {
 
-	predicate := (&PredicateConfig{Not: messageIsEmpty()}).CreatePredicate()
+	predicate := (&PredicateConfig{"not": messageIsEmpty()}).CreatePredicate()
 
 	require.False(t, predicate.Applies(&logentry.LogEntry{}))
 	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "that's not empty"}))
@@ -44,7 +62,7 @@ func TestNot(t *testing.T) {
 
 func TestContains(t *testing.T) {
 
-	predicate := (&PredicateConfig{Field: "Message", Contains: " does "}).CreatePredicate()
+	predicate := (&PredicateConfig{"message": PredicateConfig{"contains": " does "}}).CreatePredicate()
 
 	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "this does contain our substring"}))
 	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "this doesn't contain our substring"}))
@@ -54,7 +72,7 @@ func TestContains(t *testing.T) {
 
 func TestMatches(t *testing.T) {
 
-	predicate := (&PredicateConfig{Field: "Host", Matches: "%{IPV4}"}).CreatePredicate()
+	predicate := (&PredicateConfig{"host": PredicateConfig{"matches": "%{IPV4}"}}).CreatePredicate()
 
 	require.True(t, predicate.Applies(&logentry.LogEntry{Host: "127.0.0.1"}))
 	require.False(t, predicate.Applies(&logentry.LogEntry{Host: "localhost"}))
@@ -65,10 +83,40 @@ func TestMatches(t *testing.T) {
 func TestAllOf(t *testing.T) {
 
 	predicate := (&PredicateConfig{
-		AllOf: []PredicateConfig{
-			PredicateConfig{Field: "Message", Contains: "A"},
-			PredicateConfig{Field: "Host", Contains: "A"},
+		"allof": []PredicateConfig{
+			PredicateConfig{"message": PredicateConfig{"contains": "A"}},
+			PredicateConfig{"host": PredicateConfig{"contains": "A"}},
 		},
+	}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xxx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xxx"}))
+
+}
+
+func TestAllOf_DirectMap(t *testing.T) {
+
+	predicate := (&PredicateConfig{
+		"allof": PredicateConfig{
+			"message": PredicateConfig{"contains": "A"},
+			"host":    PredicateConfig{"contains": "A"},
+		},
+	}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xxx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xxx"}))
+
+}
+
+func TestAllOf_Implicit(t *testing.T) {
+
+	predicate := (&PredicateConfig{
+		"message": PredicateConfig{"contains": "A"},
+		"host":    PredicateConfig{"contains": "A"},
 	}).CreatePredicate()
 
 	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xAx"}))
@@ -81,9 +129,25 @@ func TestAllOf(t *testing.T) {
 func TestAnyOf(t *testing.T) {
 
 	predicate := (&PredicateConfig{
-		AnyOf: []PredicateConfig{
-			PredicateConfig{Field: "Message", Contains: "A"},
-			PredicateConfig{Field: "Host", Contains: "A"},
+		"anyof": []PredicateConfig{
+			PredicateConfig{"message": PredicateConfig{"contains": "A"}},
+			PredicateConfig{"host": PredicateConfig{"contains": "A"}},
+		},
+	}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xAx"}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xAx"}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xxx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xxx"}))
+
+}
+
+func TestAnyOf_DirectMap(t *testing.T) {
+
+	predicate := (&PredicateConfig{
+		"anyof": PredicateConfig{
+			"message": PredicateConfig{"contains": "A"},
+			"host":    PredicateConfig{"contains": "A"},
 		},
 	}).CreatePredicate()
 
@@ -97,9 +161,9 @@ func TestAnyOf(t *testing.T) {
 func TestNoneOf(t *testing.T) {
 
 	predicate := (&PredicateConfig{
-		NoneOf: []PredicateConfig{
-			PredicateConfig{Field: "Message", Contains: "A"},
-			PredicateConfig{Field: "Host", Contains: "A"},
+		"noneof": []PredicateConfig{
+			PredicateConfig{"message": PredicateConfig{"contains": "A"}},
+			PredicateConfig{"host": PredicateConfig{"contains": "A"}},
 		},
 	}).CreatePredicate()
 
@@ -110,6 +174,22 @@ func TestNoneOf(t *testing.T) {
 
 }
 
-func messageIsEmpty() *PredicateConfig {
-	return &PredicateConfig{Field: "Message", Is: "Empty"}
+func TestNoneOf_DirectMap(t *testing.T) {
+
+	predicate := (&PredicateConfig{
+		"noneof": PredicateConfig{
+			"message": PredicateConfig{"contains": "A"},
+			"host":    PredicateConfig{"contains": "A"},
+		},
+	}).CreatePredicate()
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xAx"}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "xAx", Host: "xxx"}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Message: "xxx", Host: "xxx"}))
+
+}
+
+func messageIsEmpty() PredicateConfig {
+	return PredicateConfig{"message": PredicateConfig{"is": "Empty"}}
 }
