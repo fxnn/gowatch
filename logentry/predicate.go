@@ -28,11 +28,20 @@ type ContainsPredicate struct {
 }
 
 func (this ContainsPredicate) Applies(logEntry *LogEntry) bool {
-	stringValue, err := logEntry.FieldAsString(this.FieldName)
-	if err == nil {
-		return strings.Contains(stringValue, this.ToBeContained)
+	if logEntry.IsTags(this.FieldName) {
+		for _, tag := range logEntry.Tags {
+			if tag == this.ToBeContained {
+				return true
+			}
+		}
+	} else {
+		stringValue, err := logEntry.FieldAsString(this.FieldName)
+		if err == nil {
+			return strings.Contains(stringValue, this.ToBeContained)
+		}
+		// in case of error, let's say it doesn't contain
 	}
-	return false // in case of error, let's say it doesn't contain
+	return false
 }
 
 type MatchesPredicate struct {
@@ -60,11 +69,9 @@ func (this MatchesPredicate) Applies(logEntry *LogEntry) bool {
 type IsEmptyPredicate struct{ FieldName string }
 
 func (this IsEmptyPredicate) Applies(logEntry *LogEntry) bool {
-	fieldValue, err := logEntry.FieldValue(this.FieldName)
-	if err == nil {
-		if fieldValue.IsValid() {
-			return isZero(fieldValue)
-		}
+	fieldValue, _ := logEntry.FieldValue(this.FieldName)
+	if fieldValue.IsValid() {
+		return isZero(fieldValue)
 	}
 
 	return logEntry.Custom[this.FieldName] == ""

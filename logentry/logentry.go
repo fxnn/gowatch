@@ -29,20 +29,27 @@ func New() (entry *LogEntry) {
 	return result
 }
 
-func (l *LogEntry) FieldValue(fieldName string) (reflect.Value, error) {
-	entryValuePointer := reflect.ValueOf(l)
-	entryValue := entryValuePointer.Elem()
-	fieldValue := entryValue.FieldByName(fieldName)
-	if fieldValue.IsValid() {
-		return fieldValue, nil
+func (l *LogEntry) FieldValue(fieldName string) (fieldValue reflect.Value, actualFieldName string) {
+	exactFieldValue := l.exactFieldValue(fieldName)
+
+	if !exactFieldValue.IsValid() && !isFormattedLikeGoStructPublicField(fieldName) {
+		alternativeFieldName := formatLikeGoStructPublicField(fieldName)
+		alternativeFieldValue := l.exactFieldValue(alternativeFieldName)
+		if alternativeFieldValue.IsValid() {
+			return alternativeFieldValue, alternativeFieldName
+		}
 	}
-	if !isOnlyFirstLetterUpperCase(fieldName) {
-		return l.FieldValue(onlyFirstLetterToUpper(fieldName))
-	}
-	return reflect.Value{}, errors.New("No valid field: " + fieldName)
+
+	return exactFieldValue, fieldName
 }
 
-func onlyFirstLetterToUpper(s string) string {
+func (l *LogEntry) exactFieldValue(fieldName string) reflect.Value {
+	entryValuePointer := reflect.ValueOf(l)
+	entryValue := entryValuePointer.Elem()
+	return entryValue.FieldByName(fieldName)
+}
+
+func formatLikeGoStructPublicField(s string) string {
 	result := ""
 	if len(s) > 0 {
 		// NOTE https://blog.golang.org/strings: s[0] would be wrong, as it gives bytes, not runes
@@ -56,7 +63,7 @@ func onlyFirstLetterToUpper(s string) string {
 	return result
 }
 
-func isOnlyFirstLetterUpperCase(s string) bool {
+func isFormattedLikeGoStructPublicField(s string) bool {
 	for i, w := 0, 0; i < len(s); i += w {
 		// NOTE https://blog.golang.org/strings: s[i] would be wrong, as it gives bytes, not runes
 		rune, width := utf8.DecodeRuneInString(s[i:])
@@ -74,35 +81,31 @@ func isOnlyFirstLetterUpperCase(s string) bool {
 }
 
 func (l *LogEntry) FieldAsString(fieldName string) (string, error) {
-	field, err := l.FieldValue(fieldName)
-	if err != nil {
-		return "", err
-	}
+	field, actualFieldName := l.FieldValue(fieldName)
 
 	switch {
 	case l.isAnyStringField(field):
-		return field.String(), err
-	case l.isLogLevelField(field, fieldName):
-		return l.Level.String(), err
-	case l.isTagsField(field, fieldName):
-		return fmt.Sprint(field.Interface()), err
+		return field.String(), nil
+	case l.isLogLevelField(field, actualFieldName):
+		return l.Level.String(), nil
+	case l.isTagsField(field, actualFieldName):
+		return fmt.Sprint(field.Interface()), nil
 	case l.isCustomField(field):
-		return l.Custom[fieldName], err
+		// HINT: Don't use actualFieldName here, but the one the user intended
+		return l.Custom[fieldName], nil
 	default:
 		return "", errors.New("Cannot be read as logentry field: " + fieldName)
 	}
 }
 
 func (l *LogEntry) AssignValue(fieldName string, value string) error {
-	entryValuePointer := reflect.ValueOf(l)
-	entryValue := entryValuePointer.Elem()
-	field := entryValue.FieldByName(fieldName)
+	field, actualFieldName := l.FieldValue(fieldName)
 
 	switch {
 	case l.isAnyStringField(field):
 		field.SetString(value)
 		return nil
-	case l.isLogLevelField(field, fieldName):
+	case l.isLogLevelField(field, actualFieldName):
 		// TODO: Support wider range of Log Level names (cf. names defined in Grok)
 		matchAsLogLevel, err := LevelFromString(value)
 		if err != nil {
@@ -110,19 +113,25 @@ func (l *LogEntry) AssignValue(fieldName string, value string) error {
 		}
 		field.SetInt(int64(matchAsLogLevel))
 		return nil
-	case l.isTagsField(field, fieldName):
+	case l.isTagsField(field, actualFieldName):
 		field.Set(reflect.Append(field, reflect.ValueOf(value)))
 		return nil
 	case l.isCustomField(field):
+		// HINT: Don't use actualFieldName here, but the one the user intended
 		l.Custom[fieldName] = value
 		return nil
 	default:
-		return errors.New("Cannot be set as logentry field: " + fieldName)
+		return fmt.Errorf("Cannot be set as logentry field: \"%s\" with value \"%s\"", fieldName, value)
 	}
 }
 
 func (l *LogEntry) isLogLevelField(field reflect.Value, fieldName string) bool {
 	return l.isAnyField(field) && field.Kind() == reflect.Int && fieldName == "Level"
+}
+
+func (l *LogEntry) IsTags(fieldName string) bool {
+	field, actualFieldName := l.FieldValue(fieldName)
+	return l.isTagsField(field, actualFieldName)
 }
 
 func (l *LogEntry) isTagsField(field reflect.Value, fieldName string) bool {

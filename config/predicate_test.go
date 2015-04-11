@@ -70,6 +70,16 @@ func TestContains(t *testing.T) {
 
 }
 
+func TestTagsContains(t *testing.T) {
+
+	predicate := (&PredicateConfig{"tags": PredicateConfig{"contains": "mytag"}}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Tags: []string{"mytag", "another"}}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Tags: []string{"another", "yet another"}}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{}))
+
+}
+
 func TestMatches(t *testing.T) {
 
 	predicate := (&PredicateConfig{"host": PredicateConfig{"matches": "%{IPV4}"}}).CreatePredicate()
