@@ -125,8 +125,17 @@ func (l *LogEntry) AssignValue(fieldName string, value string) error {
 	}
 }
 
+func (l *LogEntry) IsTimestamp(fieldName string) bool {
+	field, actualFieldName := l.FieldValue(fieldName)
+	return l.isTimestampField(field, actualFieldName)
+}
+
+func (l *LogEntry) isTimestampField(field reflect.Value, fieldName string) bool {
+	return l.isAnyField(field) && fieldName == "Timestamp"
+}
+
 func (l *LogEntry) isLogLevelField(field reflect.Value, fieldName string) bool {
-	return l.isAnyField(field) && field.Kind() == reflect.Int && fieldName == "Level"
+	return l.isAnyField(field) && fieldName == "Level"
 }
 
 func (l *LogEntry) IsTags(fieldName string) bool {
@@ -135,7 +144,7 @@ func (l *LogEntry) IsTags(fieldName string) bool {
 }
 
 func (l *LogEntry) isTagsField(field reflect.Value, fieldName string) bool {
-	return l.isAnyField(field) && field.Kind() == reflect.Slice && fieldName == "Tags"
+	return l.isAnyField(field) && fieldName == "Tags"
 }
 
 func (l *LogEntry) isAnyStringField(field reflect.Value) bool {

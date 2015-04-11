@@ -4,6 +4,7 @@ import (
 	"github.com/fxnn/gowatch/logentry"
 	"github.com/gemsi/grok"
 	"log"
+	"time"
 )
 
 type GrokParser struct {
@@ -11,10 +12,16 @@ type GrokParser struct {
 	grok       *grok.Grok
 	pattern    string
 	predicate  logentry.Predicate
+	timeLayout string
 }
 
-func NewGrokParser(linesource LineSource, pattern string, predicate logentry.Predicate) (p *GrokParser) {
-	return &GrokParser{linesource: linesource, grok: grok.New(), pattern: pattern, predicate: predicate}
+func NewGrokParser(linesource LineSource, pattern string, timeLayout string, predicate logentry.Predicate) (p *GrokParser) {
+	return &GrokParser{
+		grok:       grok.New(),
+		linesource: linesource,
+		pattern:    pattern,
+		timeLayout: timeLayout,
+		predicate:  predicate}
 }
 
 func (p *GrokParser) AddPattern(name string, pattern string) {
@@ -34,8 +41,14 @@ func (p *GrokParser) lineToLogEntry(line string, entry *logentry.LogEntry) {
 
 	for field, values := range matches {
 		for _, value := range values {
-			if err := entry.AssignValue(field, value); err != nil {
-				log.Print(err)
+			if entry.IsTimestamp(field) {
+				timestamp, err := time.Parse(p.timeLayout, value)
+				if err != nil {
+					log.Fatalf("Error on parsing with time layout \"%s\": %s", p.timeLayout, err)
+				}
+				entry.Timestamp = timestamp
+			} else if err := entry.AssignValue(field, value); err != nil {
+				log.Fatal(err)
 			}
 		}
 	}
