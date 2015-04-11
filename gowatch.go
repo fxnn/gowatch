@@ -12,11 +12,11 @@ import (
 )
 
 func main() {
-	configFilePath := getopt.StringLong("config", 'c', "", "Path to configuration file")
+	configFilePath := getopt.StringLong("config", 'c', "", "Path to configuration file", "/path/to/config.yml")
 	getopt.Parse()
 
 	if !getopt.Lookup("config").Seen() {
-		log.Fatal("No configuration file specified")
+		log.Fatal("No configuration file given. Specify one using `-c /path/to/config.yml`")
 	}
 
 	config := config.ReadConfigByFilename(*configFilePath)
