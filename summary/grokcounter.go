@@ -21,11 +21,12 @@ type GrokCounter struct {
 }
 
 func NewGrokCounter(patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
-	return NewGrokCounterWithLocale("en_US", patternsByName, predicate)
+	return NewGrokCounterWithLocale("en-US", patternsByName, predicate)
 }
 
 func NewGrokCounterWithLocale(locale string, patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
-	return NewGrokCounterWithLanguageTag(language.Make(locale), patternsByName, predicate)
+	// TODO #11 Due to a bug in golang.org/x/text, we need to hard-code the language...
+	return NewGrokCounterWithLanguageTag(language.Und, patternsByName, predicate)
 }
 
 func NewGrokCounterWithLanguageTag(locale language.Tag, patternsByName map[string]string, predicate logentry.Predicate) (tc *GrokCounter) {
