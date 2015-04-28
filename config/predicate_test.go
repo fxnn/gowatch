@@ -3,7 +3,9 @@ package config
 import (
 	"github.com/fxnn/gowatch/logentry"
 	"github.com/stretchr/testify/require"
+	"log"
 	"testing"
+	"time"
 )
 
 func TestZeroPredicate(t *testing.T) {
@@ -88,6 +90,43 @@ func TestMatches(t *testing.T) {
 	require.False(t, predicate.Applies(&logentry.LogEntry{Host: "localhost"}))
 	require.False(t, predicate.Applies(&logentry.LogEntry{Message: "127.0.0.1"}))
 
+}
+
+func TestAfter(t *testing.T) {
+
+	predicate := (&PredicateConfig{"timestamp": PredicateConfig{"after": "2015-01-01T00:00:00Z"}}).CreatePredicate()
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("1970-01-01T00:00:00Z")}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2014-12-31T23:59:59Z")}))
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2015-01-01T00:00:00Z")}))
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2015-01-01T00:00:01Z")}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2031-01-01T00:00:00Z")}))
+
+}
+
+func TestBefore(t *testing.T) {
+
+	predicate := (&PredicateConfig{"timestamp": PredicateConfig{"before": "2015-01-01T00:00:00Z"}}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("1970-01-01T00:00:00Z")}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2014-12-31T23:59:59Z")}))
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2015-01-01T00:00:00Z")}))
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2015-01-01T00:00:01Z")}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: timeFromRfc3339("2031-01-01T00:00:00Z")}))
+
+}
+
+func timeFromRfc3339(rfc3339FormattedTime string) time.Time {
+	result, err := time.Parse(time.RFC3339, rfc3339FormattedTime)
+	if err == nil {
+		return result
+	}
+	log.Panic(err)
+	return time.Time{} // actually never reached
 }
 
 func TestAllOf(t *testing.T) {

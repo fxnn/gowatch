@@ -4,6 +4,7 @@ import (
 	"github.com/fxnn/grok"
 	"reflect"
 	"strings"
+	"time"
 )
 
 type Predicate interface {
@@ -62,6 +63,32 @@ func (this MatchesPredicate) Applies(logEntry *LogEntry) bool {
 		if err == nil {
 			return result
 		}
+	}
+	return false // in case of error, let's say it doesn't contain
+}
+
+type AfterPredicate struct {
+	FieldName        string
+	EarlierTimestamp time.Time
+}
+
+func (this AfterPredicate) Applies(logEntry *LogEntry) bool {
+	time, err := logEntry.FieldAsTime(this.FieldName)
+	if err == nil {
+		return time.After(this.EarlierTimestamp)
+	}
+	return false // in case of error, let's say it doesn't contain
+}
+
+type BeforePredicate struct {
+	FieldName      string
+	LaterTimestamp time.Time
+}
+
+func (this BeforePredicate) Applies(logEntry *LogEntry) bool {
+	time, err := logEntry.FieldAsTime(this.FieldName)
+	if err == nil {
+		return time.Before(this.LaterTimestamp)
 	}
 	return false // in case of error, let's say it doesn't contain
 }

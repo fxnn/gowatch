@@ -5,7 +5,10 @@ import (
 	"github.com/fxnn/gowatch/logentry"
 	"log"
 	"strings"
+	"time"
 )
+
+var PredicateTimeLayout string = time.RFC3339
 
 func (config PredicateConfig) CreatePredicate() logentry.Predicate {
 	predicates := make([]logentry.Predicate, 0, 3)
@@ -71,8 +74,21 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 				case "matches":
 					predicates = append(predicates, logentry.MatchesPredicate{FieldName: field, GrokPattern: stringValue})
 
+				case "after", "before":
+					operand, err := time.Parse(PredicateTimeLayout, stringValue)
+					if err != nil {
+						log.Fatalf("No valid timestamp \"%s\" to compare with field \"%s\", expected format\"%s\"", stringValue, field, PredicateTimeLayout)
+						return logentry.AcceptNothingPredicate{} // actually never executed
+					}
+					switch strings.ToLower(key) {
+					case "after":
+						predicates = append(predicates, logentry.AfterPredicate{FieldName: field, EarlierTimestamp: operand})
+					case "before":
+						predicates = append(predicates, logentry.BeforePredicate{FieldName: field, LaterTimestamp: operand})
+					}
+
 				default:
-					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\" or \"matches\"", key, field)
+					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\", \"matches\" or \"after\"", key, field)
 					return logentry.AcceptNothingPredicate{} // actually never executed
 				}
 			}

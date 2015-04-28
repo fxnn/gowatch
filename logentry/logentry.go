@@ -80,6 +80,14 @@ func isFormattedLikeGoStructPublicField(s string) bool {
 	return true
 }
 
+func (l *LogEntry) FieldAsTime(fieldName string) (time.Time, error) {
+	if l.IsTimestamp(fieldName) {
+		return l.Timestamp, nil
+	}
+
+	return time.Time{}, errors.New("No timestamp field: " + fieldName)
+}
+
 func (l *LogEntry) FieldAsString(fieldName string) (string, error) {
 	field, actualFieldName := l.FieldValue(fieldName)
 
