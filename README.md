@@ -30,6 +30,24 @@ gowatch -c /path/to/config.yml
 Relative paths will always be resolved based on your current working directory. Note, that this also holds for paths
 inside the configuration file.
 
+
+## Architecture
+
+The core of `gowatch` is the following pipeline.
+
+```
+
+  +------------+     +------------+     +------------+
+  +   Parser   | --> |   Mapper   | --> | Summarizer |
+  +------------+     +------------+     +------------+
+
+```
+
+While each parser creates `LogEntry` instances (by parsing logfiles) and sends them into the pipeline, the mappers will modify these log entries and pass them to the summarizers. Each summarizer produces human readable output, e.g. by counting occurences or listing search results. The concatenation of output might then be given to the user, e.g. by mail.
+
+The names are more specific than what [Logstash](http://logstash.net) uses, and this is by intention. The aim was to build an application specifically for creating reports from logfiles. Further usecases, like network support etc., are out of scope.
+
+
 ## Related work
 
 * **[logwatch](http://logwatch.sourceforge.net)** is widely used by Linux server administrators round the world, and so
