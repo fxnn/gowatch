@@ -14,7 +14,7 @@ func (summaryConfig *SummaryConfig) CreateSummarizer() summary.Summarizer {
 		return summary.NewEcho(predicate)
 	case "tagcounter":
 		return summary.NewTagCounterWithLocale("en_US", predicate)
-	case "grokcounter":
+	case "count", "counter", "grokcounter":
 		patternsByName := make(map[string]string)
 		for key, value := range summaryConfig.Config {
 			if pattern, ok := value.(string); ok {
