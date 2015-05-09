@@ -25,7 +25,7 @@ func NewGrokParser(linesource LineSource, pattern string, timeLayout string, pre
 }
 
 func (p *GrokParser) AddPattern(name string, pattern string) {
-	p.grok.AddPattern(name, pattern, pattern)
+	p.grok.AddPattern(name, pattern)
 }
 
 func (p *GrokParser) Parse() <-chan logentry.LogEntry {
