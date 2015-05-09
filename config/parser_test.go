@@ -1,23 +1,31 @@
 package config
 
 import (
-	"github.com/fxnn/gowatch/logentry"
-	"github.com/fxnn/gowatch/parser"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
 )
 
+// #5 Grok is the default parser
+func TestGrokParserIsDefault(t *testing.T) {
+
+	config := LogfileConfig{Config: map[interface{}]interface{}{"pattern": "^%{DATA:Message}$"}}
+	parser := config.CreateParser(givenLineSource(t, "My line"), acceptAllPredicate())
+
+	entries := parser.Parse()
+	require.NotNil(t, entries)
+	entry := <-entries
+	require.Equal(t, "My line", entry.Message)
+
+}
+
 func TestCreateParserWithPredefinedTimeLayout(t *testing.T) {
 
 	formattedTime := "2006-01-02T15:04:05-07:00"
-
-	linesource := parser.NewSimpleLineSource()
-	linesource.AddLine(formattedTime)
-	predicate := logentry.AcceptAllPredicate{}
+	linesource := givenLineSource(t, formattedTime)
 
 	config := LogfileConfig{Parser: "grok", TimeLayout: "RFC3339", Config: map[interface{}]interface{}{"pattern": "^%{DATA:Timestamp}$"}}
-	parser := config.CreateParser(linesource, predicate)
+	parser := config.CreateParser(linesource, acceptAllPredicate())
 
 	entries := parser.Parse()
 	require.NotNil(t, entries)

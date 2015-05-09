@@ -11,9 +11,9 @@ func (logfile *LogfileConfig) CreateParser(linesource parser.LineSource, predica
 	timeLayout := parseTimeLayout(logfile.TimeLayout)
 
 	switch logfile.Parser {
-	case "":
+	case "simple":
 		return parser.NewSimpleParser(linesource, predicate)
-	case "grok":
+	case "", "grok":
 		if pattern, ok := logfile.Config["pattern"]; ok {
 			return parser.NewGrokParser(linesource, fmt.Sprint(pattern), timeLayout, predicate)
 		}
