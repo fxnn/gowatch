@@ -136,7 +136,3 @@ func grokParserWithLinesourceAndPredicate(linesource LineSource, predicate logen
 func grokParserWithLinesourceAndPattern(linesource LineSource, pattern string) *GrokParser {
 	return NewGrokParser(linesource, pattern, "", acceptAllPredicate())
 }
-
-func acceptAllPredicate() logentry.Predicate {
-	return &logentry.AcceptAllPredicate{}
-}

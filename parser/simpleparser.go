@@ -4,6 +4,7 @@ import (
 	"github.com/fxnn/gowatch/logentry"
 )
 
+// converts one line into one message, so it doesn't actually parse something
 type SimpleParser struct {
 	linesource LineSource
 	predicate  logentry.Predicate
