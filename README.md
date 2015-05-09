@@ -36,14 +36,12 @@ inside the configuration file.
 The core of `gowatch` is the following pipeline.
 
 ```
-
   +------------+     +------------+     +------------+
   +   Parser   | --> |   Mapper   | --> | Summarizer |
   +------------+     +------------+     +------------+
-
 ```
 
-While each parser creates `LogEntry` instances (by parsing logfiles) and sends them into the pipeline, the mappers will modify these log entries and pass them to the summarizers. Each summarizer produces human readable output, e.g. by counting occurences or listing search results. The concatenation of output might then be given to the user, e.g. by mail.
+While each `parser.Parser` creates `logentry.LogEntry` instances (by parsing logfiles) and sends them into the pipeline, the `mapper.Mapper`s will modify these log entries and pass them to the summarizers. Each `summary.Summarizer` produces human readable output, e.g. by counting occurences or listing search results. The concatenation of output might then be given to the user, e.g. by mail.
 
 The names are more specific than what [Logstash](http://logstash.net) uses, and this is by intention. The aim was to build an application specifically for creating reports from logfiles. Further usecases, like network support etc., are out of scope.
 
