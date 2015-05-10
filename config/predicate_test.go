@@ -239,6 +239,17 @@ func TestNoneOf_DirectMap(t *testing.T) {
 
 }
 
+func TestYoungerThan(t *testing.T) {
+
+	now := time.Now()
+	predicate := (&PredicateConfig{"timestamp": PredicateConfig{"younger than": "24h"}}).CreatePredicate()
+
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -2)}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -1)}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: now}))
+
+}
+
 func messageIsEmpty() PredicateConfig {
 	return PredicateConfig{"message": PredicateConfig{"is": "Empty"}}
 }

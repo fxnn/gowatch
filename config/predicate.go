@@ -78,6 +78,9 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 				case "before":
 					predicates = append(predicates, createBeforePredicate(field, PredicateTimeLayout, stringValue))
 
+				case "younger than":
+					predicates = append(predicates, createYoungerThanPredicate(field, stringValue))
+
 				default:
 					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\", \"matches\" or \"after\"", key, field)
 					return logentry.AcceptNothingPredicate{} // actually never executed
@@ -94,6 +97,15 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 	default:
 		return logentry.AllOfPredicate{predicates}
 	}
+}
+
+func createYoungerThanPredicate(fieldName string, value string) logentry.Predicate {
+	duration, err := time.ParseDuration("-" + value)
+	if err != nil {
+		log.Fatalf("No valid duration \"%s\" to compare with field \"%s\": %s", value, fieldName, err.Error())
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.AfterPredicate{FieldName: fieldName, EarlierTimestamp: time.Now().Add(duration)}
 }
 
 func createAfterPredicate(fieldName string, timeLayout string, value string) logentry.Predicate {
