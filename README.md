@@ -69,7 +69,7 @@ be what it is without:
 * **[stretchr/testify](http://github.com/stretchr/testify)** brings assertions to Go, just the way they feel right.
   Great for testing!
 * **[go-yaml/yaml](https://github.com/go-yaml/yaml)** (un)marshalls YAML files into native Go data structures with few
-  more than a single line of code. gowatch wouldn't have to configuration files it has without this library.
+  more than a single line of code. gowatch wouldn't have the configuration files it has without this library.
 
 ...among others. Thanks a lot for your work!
 
