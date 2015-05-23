@@ -46,6 +46,12 @@ func (p *GrokParser) lineToLogEntry(line string, entry *logentry.LogEntry) {
 				if err != nil {
 					log.Fatalf("Error on parsing with time layout \"%s\": %s", p.timeLayout, err)
 				}
+				if timestamp.Year() == 0 {
+					timestamp = timestamp.AddDate(time.Now().Year(), 0, 0)
+					if time.Now().Before(timestamp) {
+						timestamp = timestamp.AddDate(-1, 0, 0) // minus one year
+					}
+				}
 				entry.Timestamp = timestamp
 			} else if err := entry.AssignValue(field, value); err != nil {
 				log.Fatal(err)

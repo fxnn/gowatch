@@ -125,6 +125,33 @@ func TestGrok_TimeLayout(t *testing.T) {
 	require.Equal(t, expectedTime, resultEntry.Timestamp)
 }
 
+func TestGrok_TimeLayoutWithoutAYear(t *testing.T) {
+	linesource := givenLineSource(t, "May 14 05:41:01")
+
+	parser := grokParserWithLinesourceAndTimeLayout(linesource, time.Stamp)
+	result := parser.Parse()
+
+	require.NotNil(t, result)
+
+	resultEntry := <-result
+	require.True(t, resultEntry.Timestamp.Year() >= 1970)
+	require.True(t, time.Now().Year() <= resultEntry.Timestamp.Year())
+}
+
+func TestGrok_TimeLayoutWithoutAYear_doesntMoveToFuture(t *testing.T) {
+	linesource := givenLineSource(t, time.Now().AddDate(0, 1, 0).Format(time.Stamp))
+
+	parser := grokParserWithLinesourceAndTimeLayout(linesource, time.Stamp)
+	result := parser.Parse()
+
+	require.NotNil(t, result)
+
+	resultEntry := <-result
+	require.True(t, resultEntry.Timestamp.Year() >= 1970)
+	require.True(t, resultEntry.Timestamp.Before(time.Now()))
+	require.Equal(t, time.Now().Year()-1, resultEntry.Timestamp.Year())
+}
+
 func grokParserWithLinesourceAndTimeLayout(linesource LineSource, timeLayout string) *GrokParser {
 	return NewGrokParser(linesource, "^%{DATA:timestamp}$", timeLayout, acceptAllPredicate())
 }
