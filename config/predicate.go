@@ -80,6 +80,8 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 
 				case "younger than":
 					predicates = append(predicates, createYoungerThanPredicate(field, stringValue))
+				case "older than":
+					predicates = append(predicates, createOlderThanPredicate(field, stringValue))
 
 				default:
 					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\", \"matches\" or \"after\"", key, field)
@@ -97,6 +99,15 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 	default:
 		return logentry.AllOfPredicate{predicates}
 	}
+}
+
+func createOlderThanPredicate(fieldName string, value string) logentry.Predicate {
+	duration, err := time.ParseDuration("-" + value)
+	if err != nil {
+		log.Fatalf("No valid duration \"%s\" to compare with field \"%s\": %s", value, fieldName, err.Error())
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.BeforePredicate{FieldName: fieldName, LaterTimestamp: time.Now().Add(duration)}
 }
 
 func createYoungerThanPredicate(fieldName string, value string) logentry.Predicate {

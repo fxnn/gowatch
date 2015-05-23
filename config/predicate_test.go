@@ -246,7 +246,20 @@ func TestYoungerThan(t *testing.T) {
 
 	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -2)}))
 	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -1)}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -1).Add(time.Microsecond)}))
 	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: now}))
+
+}
+
+func TestOlderThan(t *testing.T) {
+
+	now := time.Now()
+	predicate := (&PredicateConfig{"timestamp": PredicateConfig{"older than": "24h"}}).CreatePredicate()
+
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -2)}))
+	require.True(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -1).Add(-1 * time.Microsecond)}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now.AddDate(0, 0, -1)}))
+	require.False(t, predicate.Applies(&logentry.LogEntry{Timestamp: now}))
 
 }
 
