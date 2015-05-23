@@ -34,6 +34,21 @@ func TestCreateParserWithPredefinedTimeLayout(t *testing.T) {
 
 }
 
+func TestCreateParserWithDefaultTimeLayout(t *testing.T) {
+
+	formattedTime := "Jan  2 15:04:05"
+	linesource := givenLineSource(t, formattedTime)
+
+	config := LogfileConfig{With: map[interface{}]interface{}{"pattern": "^%{DATA:Timestamp}$"}}
+	parser := config.CreateParser(linesource, acceptAllPredicate())
+
+	entries := parser.Parse()
+	require.NotNil(t, entries)
+	entry := <-entries
+	require.Equal(t, formattedTime, entry.Timestamp.Format(time.Stamp))
+
+}
+
 func TestParseTimeLayout(t *testing.T) {
 
 	testcases := []struct {

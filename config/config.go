@@ -58,6 +58,7 @@ var PredefinedTimeLayouts map[string]string = map[string]string{
 	"RFC3339":     time.RFC3339,
 	"RFC3339Nano": time.RFC3339Nano,
 	"Kitchen":     time.Kitchen,
+	"":            time.Stamp,
 	"Stamp":       time.Stamp,
 	"StampMilli":  time.StampMilli,
 	"StampMicro":  time.StampMicro,
