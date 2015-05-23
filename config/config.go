@@ -27,10 +27,10 @@ type LogfileConfig struct {
 }
 
 type SummaryConfig struct {
-	Summarizer string
-	Title      string
-	With       map[interface{}]interface{}
-	Where      PredicateConfig
+	Do    string
+	Title string
+	With  map[interface{}]interface{}
+	Where PredicateConfig
 }
 
 // This structure allows to express conditions on logentry.LogEntry in configuration files. It is not made for internal

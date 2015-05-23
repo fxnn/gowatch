@@ -73,11 +73,11 @@ func TestLogParsing(t *testing.T) {
 		},
 		// summary
 		{
-			"summary: [{summarizer: echo, title: Title, with: {a: {b: c}}}]",
+			"summary: [{do: echo, title: Title, with: {a: {b: c}}}]",
 			GowatchConfig{Summary: []SummaryConfig{
 				SummaryConfig{
-					Summarizer: "echo",
-					Title:      "Title",
+					Do:    "echo",
+					Title: "Title",
 					With: map[interface{}]interface{}{
 						"a": map[interface{}]interface{}{"b": "c"},
 					},
