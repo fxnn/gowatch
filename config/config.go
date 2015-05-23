@@ -19,7 +19,7 @@ type LogfileConfig struct {
 	Filename string
 	Tags     []string
 	Parser   string
-	Config   map[interface{}]interface{}
+	With     map[interface{}]interface{}
 	Where    PredicateConfig
 	// A layout providing the reference time, as described in Go's time.Parse function. Also see the predefined layouts
 	// in the PredefinedTimeLayouts variable.
@@ -29,7 +29,7 @@ type LogfileConfig struct {
 type SummaryConfig struct {
 	Summarizer string
 	Title      string
-	Config     map[interface{}]interface{}
+	With       map[interface{}]interface{}
 	Where      PredicateConfig
 }
 

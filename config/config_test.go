@@ -57,11 +57,11 @@ func TestLogParsing(t *testing.T) {
 		},
 		// parser
 		{
-			"logfiles: [{parser: grok, config: {pattern: my-pattern, patterns: {a: b, c: d}}}]",
+			"logfiles: [{parser: grok, with: {pattern: my-pattern, patterns: {a: b, c: d}}}]",
 			GowatchConfig{
 				Logfiles: []LogfileConfig{LogfileConfig{
 					Parser: "grok",
-					Config: map[interface{}]interface{}{
+					With: map[interface{}]interface{}{
 						"pattern": "my-pattern",
 						"patterns": map[interface{}]interface{}{
 							"a": "b",
@@ -73,12 +73,12 @@ func TestLogParsing(t *testing.T) {
 		},
 		// summary
 		{
-			"summary: [{summarizer: echo, title: Title, config: {a: {b: c}}}]",
+			"summary: [{summarizer: echo, title: Title, with: {a: {b: c}}}]",
 			GowatchConfig{Summary: []SummaryConfig{
 				SummaryConfig{
 					Summarizer: "echo",
 					Title:      "Title",
-					Config: map[interface{}]interface{}{
+					With: map[interface{}]interface{}{
 						"a": map[interface{}]interface{}{"b": "c"},
 					},
 				},
