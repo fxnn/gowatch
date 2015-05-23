@@ -70,22 +70,18 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 
 				case "contains":
 					predicates = append(predicates, logentry.ContainsPredicate{FieldName: field, ToBeContained: stringValue})
-
 				case "matches":
 					predicates = append(predicates, logentry.MatchesPredicate{FieldName: field, GrokPattern: stringValue})
 
-				case "after", "before":
-					operand, err := time.Parse(PredicateTimeLayout, stringValue)
-					if err != nil {
-						log.Fatalf("No valid timestamp \"%s\" to compare with field \"%s\", expected format\"%s\"", stringValue, field, PredicateTimeLayout)
-						return logentry.AcceptNothingPredicate{} // actually never executed
-					}
-					switch strings.ToLower(key) {
-					case "after":
-						predicates = append(predicates, logentry.AfterPredicate{FieldName: field, EarlierTimestamp: operand})
-					case "before":
-						predicates = append(predicates, logentry.BeforePredicate{FieldName: field, LaterTimestamp: operand})
-					}
+				case "after":
+					predicates = append(predicates, createAfterPredicate(field, PredicateTimeLayout, stringValue))
+				case "before":
+					predicates = append(predicates, createBeforePredicate(field, PredicateTimeLayout, stringValue))
+
+				case "younger than":
+					predicates = append(predicates, createYoungerThanPredicate(field, stringValue))
+				case "older than":
+					predicates = append(predicates, createOlderThanPredicate(field, stringValue))
 
 				default:
 					log.Fatalf("No valid predicate \"%s\" for field \"%s\", expected \"is\", \"contains\", \"matches\" or \"after\"", key, field)
@@ -103,6 +99,42 @@ func createPredicateForField(field string, predicateValue interface{}) logentry.
 	default:
 		return logentry.AllOfPredicate{predicates}
 	}
+}
+
+func createOlderThanPredicate(fieldName string, value string) logentry.Predicate {
+	duration, err := time.ParseDuration("-" + value)
+	if err != nil {
+		log.Fatalf("No valid duration \"%s\" to compare with field \"%s\": %s", value, fieldName, err.Error())
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.BeforePredicate{FieldName: fieldName, LaterTimestamp: time.Now().Add(duration)}
+}
+
+func createYoungerThanPredicate(fieldName string, value string) logentry.Predicate {
+	duration, err := time.ParseDuration("-" + value)
+	if err != nil {
+		log.Fatalf("No valid duration \"%s\" to compare with field \"%s\": %s", value, fieldName, err.Error())
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.AfterPredicate{FieldName: fieldName, EarlierTimestamp: time.Now().Add(duration)}
+}
+
+func createAfterPredicate(fieldName string, timeLayout string, value string) logentry.Predicate {
+	operand, err := time.Parse(timeLayout, value)
+	if err != nil {
+		log.Fatalf("No valid timestamp \"%s\" to compare with field \"%s\", expected format\"%s\"", value, fieldName, timeLayout)
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.AfterPredicate{FieldName: fieldName, EarlierTimestamp: operand}
+}
+
+func createBeforePredicate(fieldName string, timeLayout string, value string) logentry.Predicate {
+	operand, err := time.Parse(timeLayout, value)
+	if err != nil {
+		log.Fatalf("No valid timestamp \"%s\" to compare with field \"%s\", expected format\"%s\"", value, fieldName, timeLayout)
+		return logentry.AcceptNothingPredicate{} // actually never executed
+	}
+	return logentry.BeforePredicate{FieldName: fieldName, LaterTimestamp: operand}
 }
 
 func createSubPredicatesOrFail(value interface{}) []logentry.Predicate {
