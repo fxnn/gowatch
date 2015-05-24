@@ -33,39 +33,65 @@ The configuration files itself are separated into three main sections: logfiles,
 
 An example configuration file would be
 
-```
+```yaml
 logfiles:
-
 - filename: /var/log/auth.log
-  config: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
+  tags: ['auth.log']
+  with: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
   where: {
     timestamp: {"younger than": "24h"}
   }
-
 - filename: /var/log/mail.log
   tags: ['mail.log']
-  config: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
+  with: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
   where: {
     timestamp: {"younger than": "24h"}
   }
-  
+
 summary:
-  
-  - do: count
-    title: auth.log
-    where: {tags: {contains: 'auth.log'}}
-    config: {
-      '%{pam_caller} [%{user}] %{pam_session_state}': '%{WORD:pam_module}\(%{DATA:pam_caller}(?::%{WORD:pam_facility})\): session %{WORD:pam_session_state} for user %{USERNAME:user}(?: by %{GREEDYDATA:pam_by})?',
-      'sudo [%{user}->%{effective_user}] %{command}': '\s*%{USER:user}\s*: TTY=%{DATA:tty} ; PWD=%{PATH:pwd} ; USER=%{USER:effective_user} ; COMMAND=%{PATH:command}(: %{GREEDYDATA:arguments})?'
-    }
-  
-  - do: count
-    title: Stored Mails
-    where: {tags: {contains: 'mail.log'}}
-    config: {
-      'Discarded': 'deliver\(%{USER:user}\): sieve: msgid=<%{DATA:msgid}>: marked message to be discarded if not explicitly delivered',
-      'Stored [%{mailboxname}]': "deliver\\(%{USER:user}\\): sieve: msgid=<%{DATA:msgid}>: stored mail into mailbox '%{DATA:mailboxname}'",
-    }
+- do: count
+  title: Opened Sessions
+  where: {tags: {contains: 'auth.log'}}
+  with: {
+    '%{user}': '%{WORD:pam_module}\(%{DATA:pam_caller}\): session opened for user %{USERNAME:user}.*'
+  }
+- do: count
+  title: Sudoers
+  where: {tags: {contains: 'auth.log'}}
+  with: {
+    '%{user}->%{effective_user}: %{command}': '\s*%{USER:user}\s*: TTY=%{DATA} ; PWD=%{PATH} ; USER=%{USER:effective_user} ; COMMAND=%{PATH:command}(: %{GREEDYDATA:arguments})?'
+  }
+- do: count
+  title: Stored Mails
+  where: {tags: {contains: 'mail.log'}}
+  with: {
+    'Stored [%{mailboxname}]': "deliver\\(%{USER:user}\\): sieve: msgid=<%{DATA}>: stored mail into mailbox '%{DATA:mailboxname}'",
+  }
+```
+
+The configuration above would give the following output:
+
+```
+Opened Sessions
+===============
+jon.doe: 292
+nobody: 24
+root: 78
+
+Sudoers
+=======
+jon.doe->root: /bin/chown: 1
+jon.doe->root: /bin/ln: 1
+jon.doe->root: /bin/ls: 1
+jon.doe->root: /bin/mv: 1
+jon.doe->root: /home/jon.doe/workspace/go/bin/gowatch: 9
+jon.doe->root: /usr/bin/less: 7
+jon.doe->root: /usr/bin/vim: 9
+
+Stored Mails
+============
+Stored [INBOX]: 20
+Stored [Junk]: 24
 ```
 
 
