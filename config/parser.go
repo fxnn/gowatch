@@ -14,7 +14,7 @@ func (logfile *LogfileConfig) CreateParser(linesource parser.LineSource, predica
 	case "simple":
 		return parser.NewSimpleParser(linesource, predicate)
 	case "", "grok":
-		if pattern, ok := logfile.Config["pattern"]; ok {
+		if pattern, ok := logfile.With["pattern"]; ok {
 			return parser.NewGrokParser(linesource, fmt.Sprint(pattern), timeLayout, predicate)
 		}
 		log.Fatal("Grok parser used without pattern on logfile '", logfile.Filename, "'")

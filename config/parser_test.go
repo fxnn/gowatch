@@ -9,7 +9,7 @@ import (
 // #5 Grok is the default parser
 func TestGrokParserIsDefault(t *testing.T) {
 
-	config := LogfileConfig{Config: map[interface{}]interface{}{"pattern": "^%{DATA:Message}$"}}
+	config := LogfileConfig{With: map[interface{}]interface{}{"pattern": "^%{DATA:Message}$"}}
 	parser := config.CreateParser(givenLineSource(t, "My line"), acceptAllPredicate())
 
 	entries := parser.Parse()
@@ -24,13 +24,28 @@ func TestCreateParserWithPredefinedTimeLayout(t *testing.T) {
 	formattedTime := "2006-01-02T15:04:05-07:00"
 	linesource := givenLineSource(t, formattedTime)
 
-	config := LogfileConfig{Parser: "grok", TimeLayout: "RFC3339", Config: map[interface{}]interface{}{"pattern": "^%{DATA:Timestamp}$"}}
+	config := LogfileConfig{Parser: "grok", TimeLayout: "RFC3339", With: map[interface{}]interface{}{"pattern": "^%{DATA:Timestamp}$"}}
 	parser := config.CreateParser(linesource, acceptAllPredicate())
 
 	entries := parser.Parse()
 	require.NotNil(t, entries)
 	entry := <-entries
 	require.Equal(t, formattedTime, entry.Timestamp.Format(time.RFC3339))
+
+}
+
+func TestCreateParserWithDefaultTimeLayout(t *testing.T) {
+
+	formattedTime := "Jan  2 15:04:05"
+	linesource := givenLineSource(t, formattedTime)
+
+	config := LogfileConfig{With: map[interface{}]interface{}{"pattern": "^%{DATA:Timestamp}$"}}
+	parser := config.CreateParser(linesource, acceptAllPredicate())
+
+	entries := parser.Parse()
+	require.NotNil(t, entries)
+	entry := <-entries
+	require.Equal(t, formattedTime, entry.Timestamp.Format(time.Stamp))
 
 }
 

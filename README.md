@@ -1,9 +1,6 @@
 # gowatch
 
-gowatch will provide configurable logfile analysis for your server. It will be able to parse your logfiles and create
-summaries in formats ready for delivery via E-Mail or Web.
-
-However, this is still under development and _not_ ready for use yet.
+gowatch provides configurable logfile analysis for your server. It is able to parse your logfiles and create summaries in formats ready for delivery via E-Mail or Web.
 
 [![Build Status](https://travis-ci.org/fxnn/gowatch.svg)](https://travis-ci.org/fxnn/gowatch)
 
@@ -27,8 +24,72 @@ $ gowatch
 gowatch -c /path/to/config.yml
 ```
 
-Relative paths will always be resolved based on your current working directory. Note, that this also holds for paths
-inside the configuration file.
+Relative paths will always be resolved based on your current working directory. Note, that this also holds for paths inside the configuration file.
+
+The configuration files itself are separated into three main sections: logfiles, mappers *(not implemented yet)* and summarizers. This reflects the architecture (see below).
+
+An example configuration file would be
+
+```yaml
+logfiles:
+- filename: /var/log/auth.log
+  tags: ['auth.log']
+  with: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
+  where: {
+    timestamp: {"younger than": "24h"}
+  }
+- filename: /var/log/mail.log
+  tags: ['mail.log']
+  with: {pattern: '%{SYSLOGBASE} %{GREEDYDATA:Message}'}
+  where: {
+    timestamp: {"younger than": "24h"}
+  }
+
+summary:
+- do: count
+  title: Opened Sessions
+  where: {tags: {contains: 'auth.log'}}
+  with: {
+    '%{user}': '%{WORD:pam_module}\(%{DATA:pam_caller}\): session opened for user %{USERNAME:user}.*'
+  }
+- do: count
+  title: Sudoers
+  where: {tags: {contains: 'auth.log'}}
+  with: {
+    '%{user}->%{effective_user}: %{command}': '\s*%{USER:user}\s*: TTY=%{DATA} ; PWD=%{PATH} ; USER=%{USER:effective_user} ; COMMAND=%{PATH:command}(: %{GREEDYDATA:arguments})?'
+  }
+- do: count
+  title: Stored Mails
+  where: {tags: {contains: 'mail.log'}}
+  with: {
+    'Stored [%{mailboxname}]': "deliver\\(%{USER:user}\\): sieve: msgid=<%{DATA}>: stored mail into mailbox '%{DATA:mailboxname}'",
+  }
+```
+
+The configuration above would give the following output:
+
+```
+Opened Sessions
+===============
+jon.doe: 292
+nobody: 24
+root: 78
+
+Sudoers
+=======
+jon.doe->root: /bin/chown: 1
+jon.doe->root: /bin/ln: 1
+jon.doe->root: /bin/ls: 1
+jon.doe->root: /bin/mv: 1
+jon.doe->root: /home/jon.doe/workspace/go/bin/gowatch: 9
+jon.doe->root: /usr/bin/less: 7
+jon.doe->root: /usr/bin/vim: 9
+
+Stored Mails
+============
+Stored [INBOX]: 20
+Stored [Junk]: 24
+```
 
 
 ## Architecture

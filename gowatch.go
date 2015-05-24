@@ -28,7 +28,7 @@ func main() {
 		if summaryConfig.Title != "" {
 			summarizerTitles[i] = summaryConfig.Title
 		} else {
-			summarizerTitles[i] = summaryConfig.Summarizer
+			summarizerTitles[i] = summaryConfig.Do
 		}
 	}
 

@@ -15,22 +15,30 @@ type GowatchConfig struct {
 	Summary  []SummaryConfig
 }
 
+// Configures a logfile whose lines shall be parsed and processed by gowatch
 type LogfileConfig struct {
 	Filename string
-	Tags     []string
-	Parser   string
-	Config   map[interface{}]interface{}
-	Where    PredicateConfig
+	// Tags that will be appended to each logline
+	Tags   []string
+	Parser string
+	// Configures the parser
+	With map[interface{}]interface{}
+	// Predicates that can filter the lines being processed by gowatch
+	Where PredicateConfig
 	// A layout providing the reference time, as described in Go's time.Parse function. Also see the predefined layouts
 	// in the PredefinedTimeLayouts variable.
 	TimeLayout string
 }
 
+// Configures one summary
 type SummaryConfig struct {
-	Summarizer string
-	Title      string
-	Config     map[interface{}]interface{}
-	Where      PredicateConfig
+	// Determines the type of summary
+	Do    string
+	Title string
+	// Configures the summary
+	With map[interface{}]interface{}
+	// Prediactes that filter the lines to be considered in this summary
+	Where PredicateConfig
 }
 
 // This structure allows to express conditions on logentry.LogEntry in configuration files. It is not made for internal
@@ -50,6 +58,7 @@ var PredefinedTimeLayouts map[string]string = map[string]string{
 	"RFC3339":     time.RFC3339,
 	"RFC3339Nano": time.RFC3339Nano,
 	"Kitchen":     time.Kitchen,
+	"":            time.Stamp,
 	"Stamp":       time.Stamp,
 	"StampMilli":  time.StampMilli,
 	"StampMicro":  time.StampMicro,
