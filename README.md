@@ -63,12 +63,6 @@ summary:
 The configuration above would give the following output:
 
 ```
-Opened Sessions
-===============
-jon.doe: 292
-nobody: 24
-root: 78
-
 Sudoers
 =======
 jon.doe->root: /bin/chown: 1
