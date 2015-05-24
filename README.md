@@ -47,12 +47,6 @@ logfiles:
 
 summary:
 - do: count
-  title: Opened Sessions
-  where: {tags: {contains: 'auth.log'}}
-  with: {
-    '%{user}': '%{WORD:pam_module}\(%{DATA:pam_caller}\): session opened for user %{USERNAME:user}.*'
-  }
-- do: count
   title: Sudoers
   where: {tags: {contains: 'auth.log'}}
   with: {
