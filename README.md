@@ -3,6 +3,7 @@
 gowatch provides configurable logfile analysis for your server. It is able to parse your logfiles and create summaries in formats ready for delivery via E-Mail or Web.
 
 [![Build Status](https://travis-ci.org/fxnn/gowatch.svg)](https://travis-ci.org/fxnn/gowatch)
+[![Go Report Card](http://goreportcard.com/badge/fxnn/gowatch)](http:/goreportcard.com/report/fxnn/gowatch)
 
 ## Installation
 
